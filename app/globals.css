@@ -1,0 +1,195 @@
+@import "tailwindcss";
+
+
+/* ─── MBA Design Tokens ─────────────────────────────────────────────────────── */
+:root {
+  /* Base surfaces — warm parchment, not white, not grey */
+  --mba-bg:            #FAF7F0;
+  --mba-surface:       #FFFFFF;
+  --mba-surface-sunk:  #F1EDE2;
+
+  /* Ink — never pure black */
+  --mba-ink:            #1F1B16;
+  --mba-ink-soft:       #5B5448;
+  --mba-ink-faint:      #9B9282;
+
+  /* Single accent — deep ink-blue, used sparingly */
+  --mba-accent:         #1E3A5F;
+  --mba-accent-soft:    #E8EDF2;
+
+  /* Specialization chip accents */
+  --chip-marketing:     #B5562C;
+  --chip-finance:       #2F6F4E;
+  --chip-consulting:    #6B4C8A;
+  --chip-operations:    #1E3A5F;
+  --chip-strategy:      #8A6D1E;
+  --chip-people:        #A14C5C;
+
+  /* Semantic */
+  --mba-rule:           #DDD5C3;
+  --mba-success:        #2F6F4E;
+  --mba-warning:        #8A6D1E;
+  --mba-danger:         #9B3A33;
+
+  /* Type scale — fluid via clamp */
+  --text-display:   clamp(1.75rem, 1.4rem + 1.5vw, 2.5rem);
+  --text-h2:        clamp(1.25rem, 1.1rem + 0.6vw, 1.5rem);
+  --text-h3:        1.125rem;
+  --text-body:      1rem;
+  --text-caption:   0.875rem;
+  --text-mono-label: 0.75rem;
+
+  /* Leading */
+  --leading-body:   1.6;
+  --leading-tight:  1.25;
+
+  /* Measure */
+  --measure-desktop: 66ch;
+  --measure-mobile:  42ch;
+
+  /* Spacing scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+
+  /* Radii */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  /* Shadow — barely visible */
+  --shadow-sm: 0 1px 3px rgba(31,27,22,0.06);
+  --shadow-md: 0 2px 8px rgba(31,27,22,0.08);
+}
+
+/* ─── Base Reset & Defaults ─────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--mba-bg);
+  color: var(--mba-ink);
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ─── Typography utilities ──────────────────────────────────────────────────── */
+.font-display {
+  font-family: var(--font-cormorant), Georgia, serif;
+}
+
+.font-body {
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+}
+
+.font-mono {
+  font-family: var(--font-mono), monospace;
+}
+
+.text-display { font-size: var(--text-display); line-height: var(--leading-tight); }
+.text-h2      { font-size: var(--text-h2); line-height: var(--leading-tight); }
+.text-h3      { font-size: var(--text-h3); line-height: var(--leading-tight); }
+.text-body    { font-size: var(--text-body); line-height: var(--leading-body); }
+.text-caption { font-size: var(--text-caption); line-height: var(--leading-body); }
+.text-mono-label {
+  font-size: var(--text-mono-label);
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+}
+
+.tabular-nums { font-variant-numeric: tabular-nums; }
+
+/* Color utilities */
+.text-ink       { color: var(--mba-ink); }
+.text-ink-soft  { color: var(--mba-ink-soft); }
+.text-ink-faint { color: var(--mba-ink-faint); }
+.text-accent    { color: var(--mba-accent); }
+
+/* Surface utilities */
+.bg-mba         { background-color: var(--mba-bg); }
+.bg-surface     { background-color: var(--mba-surface); }
+.bg-surface-sunk{ background-color: var(--mba-surface-sunk); }
+.bg-accent-soft { background-color: var(--mba-accent-soft); }
+
+/* ─── Measure (max line length) ─────────────────────────────────────────────── */
+.prose-measure {
+  max-width: var(--measure-desktop);
+}
+
+@media (max-width: 640px) {
+  .prose-measure { max-width: var(--measure-mobile); }
+}
+
+/* ─── Hairline rule ─────────────────────────────────────────────────────────── */
+.rule-bottom { border-bottom: 1px solid var(--mba-rule); }
+.rule-top    { border-top:    1px solid var(--mba-rule); }
+.rule-left   { border-left:   1px solid var(--mba-rule); }
+
+/* ─── Chip color utilities (one per specialization) ─────────────────────────── */
+.chip-marketing { color: var(--chip-marketing); }
+.chip-finance   { color: var(--chip-finance); }
+.chip-consulting{ color: var(--chip-consulting); }
+.chip-operations{ color: var(--chip-operations); }
+.chip-strategy  { color: var(--chip-strategy); }
+.chip-people    { color: var(--chip-people); }
+
+.chip-bg-marketing { background-color: color-mix(in srgb, var(--chip-marketing) 12%, transparent); }
+.chip-bg-finance   { background-color: color-mix(in srgb, var(--chip-finance) 12%, transparent); }
+.chip-bg-consulting{ background-color: color-mix(in srgb, var(--chip-consulting) 12%, transparent); }
+.chip-bg-operations{ background-color: color-mix(in srgb, var(--chip-operations) 12%, transparent); }
+.chip-bg-strategy  { background-color: color-mix(in srgb, var(--chip-strategy) 12%, transparent); }
+.chip-bg-people    { background-color: color-mix(in srgb, var(--chip-people) 12%, transparent); }
+
+.chip-border-marketing { border-left: 3px solid var(--chip-marketing); }
+.chip-border-finance   { border-left: 3px solid var(--chip-finance); }
+.chip-border-consulting{ border-left: 3px solid var(--chip-consulting); }
+.chip-border-operations{ border-left: 3px solid var(--chip-operations); }
+.chip-border-strategy  { border-left: 3px solid var(--chip-strategy); }
+.chip-border-people    { border-left: 3px solid var(--chip-people); }
+
+/* ─── Reduced motion ────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ─── Scrollbar (subtle) ────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--mba-rule); border-radius: 3px; }
+
+/* ─── Focus ring ────────────────────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--mba-accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* ─── Accordion / collapsible ───────────────────────────────────────────────── */
+details summary { cursor: pointer; list-style: none; }
+details summary::-webkit-details-marker { display: none; }
+
+/* ─── Table resets ──────────────────────────────────────────────────────────── */
+table { border-collapse: collapse; width: 100%; }
+th, td { text-align: left; vertical-align: top; }

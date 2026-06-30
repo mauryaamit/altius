@@ -1,0 +1,79 @@
+[
+  {
+    "id": "mint-2026-06-30",
+    "date": "2026-06-30",
+    "edition": "Delhi",
+    "sourceUrl": "https://epaper.livemint.com/Home/Mindex?utm_content=Mint_SEM_Google&gad_source=1&gad_campaignid=18722264859&gbraid=0AAAAADadt_5-DEwCaqacv9vXCYQ7FYkUo&gclid=Cj0KCQjwoMXQBhDcARIsAH-eEtvWHNSllOxl6p_s7WGfHTcNoOj2LhaChhx0gBt3DxJYjHBUKcOjgOsaAokJEALw_wcB",
+    "downloadTime": "2026-06-30T05:37:16.275Z",
+    "fileSize": "12.1 MB",
+    "checksum": "mint-checksum-2026-06-30",
+    "downloadStatus": "Downloaded",
+    "localFileUrl": "/archive/mint/mint-2026-06-30.pdf"
+  },
+  {
+    "id": "mint-2026-06-27",
+    "date": "2026-06-27",
+    "edition": "Delhi",
+    "sourceUrl": "https://epaper.livemint.com",
+    "downloadTime": "2026-06-27T05:15:00Z",
+    "fileSize": "11.8 MB",
+    "checksum": "mint-checksum-2026-06-27",
+    "downloadStatus": "Downloaded",
+    "localFileUrl": "/archive/mint/mint-2026-06-27.pdf"
+  },
+  {
+    "id": "mint-2026-06-26",
+    "date": "2026-06-26",
+    "edition": "Delhi",
+    "sourceUrl": "https://epaper.livemint.com",
+    "downloadTime": "2026-06-26T05:20:00Z",
+    "fileSize": "12.4 MB",
+    "checksum": "mint-checksum-2026-06-26",
+    "downloadStatus": "Downloaded",
+    "localFileUrl": "/archive/mint/mint-2026-06-26.pdf"
+  },
+  {
+    "id": "mint-2026-06-25",
+    "date": "2026-06-25",
+    "edition": "Delhi",
+    "sourceUrl": "https://epaper.livemint.com",
+    "downloadTime": "2026-06-25T05:10:00Z",
+    "fileSize": "13.1 MB",
+    "checksum": "mint-checksum-2026-06-25",
+    "downloadStatus": "Downloaded",
+    "localFileUrl": "/archive/mint/mint-2026-06-25.pdf"
+  },
+  {
+    "id": "mint-2026-06-24",
+    "date": "2026-06-24",
+    "edition": "Delhi",
+    "sourceUrl": "https://epaper.livemint.com",
+    "downloadTime": "2026-06-24T05:30:00Z",
+    "fileSize": "12.9 MB",
+    "checksum": "mint-checksum-2026-06-24",
+    "downloadStatus": "Downloaded",
+    "localFileUrl": "/archive/mint/mint-2026-06-24.pdf"
+  },
+  {
+    "id": "mint-2026-06-23",
+    "date": "2026-06-23",
+    "edition": "Delhi",
+    "sourceUrl": "https://epaper.livemint.com",
+    "downloadTime": "2026-06-23T05:12:00Z",
+    "fileSize": "11.2 MB",
+    "checksum": "mint-checksum-2026-06-23",
+    "downloadStatus": "Downloaded",
+    "localFileUrl": "/archive/mint/mint-2026-06-23.pdf"
+  },
+  {
+    "id": "mint-2026-06-22",
+    "date": "2026-06-22",
+    "edition": "Delhi",
+    "sourceUrl": "https://epaper.livemint.com",
+    "downloadTime": "2026-06-22T05:08:00Z",
+    "fileSize": "12.0 MB",
+    "checksum": "mint-checksum-2026-06-22",
+    "downloadStatus": "Downloaded",
+    "localFileUrl": "/archive/mint/mint-2026-06-22.pdf"
+  }
+]
