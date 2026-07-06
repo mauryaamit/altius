@@ -2,6 +2,86 @@ import type { ConceptEntry, CaseContent, HotTopicContent, ThinkContent, LibraryE
 
 export const peopleConcepts: ConceptEntry[] = [
   {
+  "id": "peop-psych-safety",
+  "title": "Psychological Safety",
+  "category": "Leadership",
+  "altitude": {
+    "hook": "Psychological safety is the shared belief that team members will not be penalized for speaking up.",
+    "plain": "Imagine a hospital team where a junior nurse notices a senior surgeon is about to inject the wrong medicine. If the team has psychological safety, the nurse speaks up instantly. If not, the nurse stays silent to avoid embarrassment, endangering the patient. Safety removes the fear of looking stupid.",
+    "depth": "Identified by Amy Edmondson and validated by Google's Project Aristotle as the #1 driver of high-performing teams. It is not 'being nice' or lowering standards; it is enabling productive dissent. Teams with high safety report *more* errors because they openly discuss them, leading to faster correction. It fails when leaders mistake safety for lack of accountability, letting low performance pass without feedback."
+  }
+},
+  {
+  "id": "peop-total-rewards",
+  "title": "Total Rewards Philosophy",
+  "category": "Management",
+  "altitude": {
+    "hook": "Total rewards looks at the entire package of cash, benefits, and growth used to attract talent.",
+    "plain": "Employees don't just work for base salary. They evaluate a job based on the complete circle: base cash, stock options (incentives), health insurance (benefits), remote work flexibility, learning budgets, and promotional pathways. Total rewards is the design of this blended basket.",
+    "depth": "Total Rewards maps: Compensation (Fixed + Variable), Benefits, Work-Life Effectiveness, Recognition, and Talent Development. HR strategists balance fixed cost (salary) against risk-sharing incentives (ESOPs/bonuses). For example, tech companies offer lower cash but high stock upside to align incentives. The philosophy fails when it assumes benefits can substitute for uncompetitive base salaries in low-income employee cohorts."
+  }
+},
+  {
+  "id": "peop-workforce-planning",
+  "title": "Strategic Workforce Planning",
+  "category": "Management",
+  "altitude": {
+    "hook": "Workforce planning balances labor supply and demand to execute business strategy.",
+    "plain": "If a software firm plans to build an AI product next year, they can't wait until then to hire developers. Strategic workforce planning models: How many coders do we need? Do we have them now? Can we train our current staff (Build), or do we need to hire from outside (Buy)?",
+    "depth": "Strategic Workforce Planning evaluates headcount using the '5 Bs': Build (retrain), Buy (hire), Borrow (contractors), Bounce (redunancies), and Bind (retention). It aligns HR capacity with the corporate budget. It fails when HR planners rely on historical attrition rates during industry shifts, leading to talent shortages or expensive layoff cycles."
+  }
+},
+  {
+  "id": "peop-dei-strategy",
+  "title": "DEI as Business Strategy",
+  "category": "Management",
+  "altitude": {
+    "hook": "DEI strategy connects cognitive variety directly to market adaptability.",
+    "plain": "If a shoe company only hires designers who live in cities, they will design great urban shoes but fail to understand rural consumers. Diversity, Equity, and Inclusion (DEI) is a strategy to bring different perspectives into the room to prevent product blind spots and enter new customer segments.",
+    "depth": "Diverse teams reduce Groupthink and improve innovation. Equity ensures meritocratic progression, while Inclusion ensures diverse recruits have actual voice. For example, consumer goods firms utilize diverse product panels to match regional tastes. DEI fails when treated as a cosmetic HR target (tokenism) without modifying the corporate power structures, resulting in employee cynicism."
+  }
+},
+  {
+  "id": "peop-org-agility",
+  "title": "Organizational Agility",
+  "category": "Management",
+  "altitude": {
+    "hook": "Organizational agility is the structural design that lets big firms behave like fast startups.",
+    "plain": "A traditional company is like a large cruise ship; it is highly stable but takes 5 miles to turn. An agile organization acts like a flotilla of small speedboats; they navigate independently but coordinate direction, allowing the company to pivot immediately when the market shifts.",
+    "depth": "Agile design replaces hierarchical silos with cross-functional 'Squads' and 'Tribes' (e.g. Spotify model). Decisions are decentralized to the front lines. The corporate center transitions from control to coordination. Org agility fails when leaders implement agile terminology (sprints, standups) without changing the underlying centralized budget approval cycles, creating speed theater."
+  }
+},
+  {
+  "id": "peop-shrm-competency",
+  "title": "SHRM Competency Model",
+  "category": "Framework",
+  "altitude": {
+    "hook": "SHRM competency model defines the skills required for modern HR leaders.",
+    "plain": "HR was once seen as just handling payroll and paperwork. The SHRM model redefines the role: modern HR professionals must understand finance, consult on strategy, lead change, evaluate data, and navigate cultural dynamics, acting as critical business partners to the CEO.",
+    "depth": "Developed by the Society for Human Resource Management, the model highlights nine competencies, including Business Acumen, Relationship Management, and Consultation. It shifts HR from administrative to strategic. It fails when HR leaders focus exclusively on competency frameworks, creating bureaucratic assessment loops that do not correlate with actual business outcomes."
+  }
+},
+  {
+  "id": "peop-hr-analytics",
+  "title": "HR Analytics Fundamentals",
+  "category": "Analysis",
+  "altitude": {
+    "hook": "HR analytics uses data to predict employee turnover and optimize hiring yield.",
+    "plain": "Instead of guessing why employees leave, HR analytics models data like tenure, salary ratio, commute time, and team reviews. It identifies specific flags that predict who is likely to quit next month, allowing managers to intervene before the resignation letter arrives.",
+    "depth": "HR analytics (People Analytics) evaluates metrics: Cost-Per-Hire, Time-to-Fill, Turnover Rate, and Employee Lifetime Value. Advanced models use predictive attrition modeling and natural language processing on survey reviews. It fails when it relies on biased training data (e.g. historical promotion logs reflecting nepotism), causing algorithms to reinforce systemic inequalities."
+  }
+},
+  {
+  "id": "peop-gig-management",
+  "title": "Gig Economy Workforce Management",
+  "category": "Management",
+  "altitude": {
+    "hook": "Gig workforce management is the coordination of non-employee contractors via algorithms.",
+    "plain": "In a traditional firm, you manage workers via human supervisors and scheduled meetings. In a gig platform (like Uber), you manage hundreds of thousands of delivery drivers using algorithmic rules, push notifications, and surge pricing incentives to coordinate logistics.",
+    "depth": "Gig management balances flexibility against algorithmic control. Platforms use reward structures (gamification) to drive worker availability. However, managing contractors raises legal classification risks (employee vs contractor) and high turnover rates. It fails when algorithmic rules are too rigid, triggering worker strikes, quality drops, and consumer backlash."
+  }
+},
+  {
     id: 'peop-situational',
     title: 'Situational Leadership',
     category: 'Leadership',

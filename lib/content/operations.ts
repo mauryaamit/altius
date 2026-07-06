@@ -2,6 +2,96 @@ import type { ConceptEntry, CaseContent, HotTopicContent, ThinkContent, LibraryE
 
 export const operationsConcepts: ConceptEntry[] = [
   {
+  "id": "ops-littles-law",
+  "title": "Little's Law (L=\u03bbW)",
+  "category": "SCM",
+  "altitude": {
+    "hook": "Little's Law is the mathematical link between inventory, throughput, and lead time.",
+    "plain": "Imagine a coffee shop where 10 customers arrive per hour (\u03bb) and they spend an average of 0.5 hours in the shop (W). Little's Law says the average number of customers in the shop (L) will always be 10 x 0.5 = 5. To reduce wait time, you must either decrease the queue size or increase processing speed.",
+    "depth": "Formulated by John Little in 1961, the formula is: Inventory (L) = Flow Rate (\u03bb) x Flow Time (W). It applies to manufacturing queues, digital request processing, and hospital triage. It proves that to reduce cycle time (W), you must either clear inventory build-up or increase throughput. It fails when the flow rate is unstable and experiences severe, erratic spikes, violating the steady-state assumption of the law."
+  }
+},
+  {
+  "id": "ops-bullwhip-effect",
+  "title": "The Bullwhip Effect",
+  "category": "SCM",
+  "altitude": {
+    "hook": "The Bullwhip Effect is how minor shifts in consumer demand create massive supply chain swings.",
+    "plain": "Imagine a slight flick of your wrist moving a whip; the tip of the whip moves in a massive, wild loop. In supply chains, if retail consumers buy 5% more diapers this week, the supermarket orders 10% more to be safe, the distributor orders 20% more, and the factory ramps production by 50%. Minor variations inflate at every tier.",
+    "depth": "First identified by Jay Forrester in 1961 and popularized by Procter & Gamble, the effect is driven by lack of information transparency, batch ordering, price promotions, and panic hoarding. Tiers maintain safety stock buffers, compounding demand signals. A classic example is the semiconductor shortage of 2021. The framework fails when assuming that simply sharing customer sales data resolves the effect; trust barriers and contract structures must also be aligned."
+  }
+},
+  {
+  "id": "ops-queue-theory",
+  "title": "Queue Theory Basics (M/M/1)",
+  "category": "SCM",
+  "altitude": {
+    "hook": "Queue theory shows why utilization rates near 100% explode customer wait times.",
+    "plain": "If a bank teller can handle 10 customers an hour, and 9 customers arrive per hour, you might expect a short wait. However, because arrivals are random (some arrive together, others spread out), the teller's high utilization (90%) creates a permanent backlog, exploding the queue length.",
+    "depth": "Queue theory models service nodes using Kendall's notation. An M/M/1 queue has Poisson arrivals, Exponential service times, and 1 server. As utilization (\u03c1 = arrival rate / service rate) approaches 1.0, wait time increases exponentially toward infinity. Consultants use this to design capacity buffers. For example, call centers target 85% utilization, not 95%. It fails when assuming standard distributions during black swan events (e.g. system crashes)."
+  }
+},
+  {
+  "id": "ops-tpm",
+  "title": "Total Productive Maintenance",
+  "category": "Optimization",
+  "altitude": {
+    "hook": "TPM shifts machine maintenance from emergency repair to daily collective ownership.",
+    "plain": "TPM is like owning a delivery van. Instead of driving it until the engine explodes and forces a 5-day repair, you train the driver to check daily parameters. This daily ownership prevents major breakdowns before they happen.",
+    "depth": "Developed in Japan in 1971, TPM aims for 'Zero Breakdowns, Zero Defects, Zero Accidents.' It establishes 'Autonomous Maintenance' where operators, not just specialized mechanics, maintain their own equipment. It measures Overall Equipment Effectiveness (OEE = Availability x Performance x Quality). TPM fails when corporate leaders treat it as a cost-cutting campaign, reducing maintenance budgets while expecting operators to pick up the slack without training."
+  }
+},
+  {
+  "id": "ops-5s-method",
+  "title": "5S Methodology",
+  "category": "Optimization",
+  "altitude": {
+    "hook": "5S is the visual discipline of organizing workplaces to eliminate search waste.",
+    "plain": "5S stands for Sort (remove junk), Set in order (a home for everything), Shine (clean daily), Standardize (rules for the layout), and Sustain (habits). It is like organizing a professional kitchen so a chef can grab a knife instantly without looking, keeping the line moving.",
+    "depth": "Originating from Toyota's Production System, 5S is the prerequisite for lean manufacturing. A clean, structured workplace makes deviations, inventory leaks, and safety hazards immediately visible. Red tags are used to flag unused equipment. The biggest failure mode is treating 5S as a cosmetic cleanup ('housekeeping') before client visits, rather than a daily operational discipline that reduces waste."
+  }
+},
+  {
+  "id": "ops-platform-ops",
+  "title": "Platform vs. Linear Operations",
+  "category": "Strategy",
+  "altitude": {
+    "hook": "Platform operations manage ecosystem interactions, whereas linear operations manage supply chains.",
+    "plain": "Linear operations (like a traditional steel plant) take raw materials, process them, and sell the product to customers. Platform operations (like Uber or Airbnb) do not own the cars or the rooms; they manage the digital matching rules and trust systems that let independent drivers and riders transact.",
+    "depth": "Linear operations focus on cost reduction, inventory turns, and supply chain control. Platform operations focus on network effects, transaction facilitation, and algorithmic matching. The operational bottlenecks shift from physical capacity to customer onboarding and search friction. Platform operations fail when the matching algorithm fails to resolve fraud, or when platforms squeeze suppliers so hard that they migrate to competitors."
+  }
+},
+  {
+  "id": "ops-india-logistics",
+  "title": "India Logistics & PM GatiShakti",
+  "category": "SCM",
+  "altitude": {
+    "hook": "GatiShakti is the national portal to synchronize infrastructure planning across ministries.",
+    "plain": "Imagine a city department paving a road, only for the water department to dig it up next week to lay pipes because they didn't coordinate. PM GatiShakti is India's digital master plan that brings 16 ministries together so railways, roads, and ports are built in sync, lowering logistics costs.",
+    "depth": "India's logistics cost represents ~13-14% of GDP, compared to 8% in developed nations. This friction is driven by fragmented infrastructure, bureaucratic clearances, and high dependency on road transport over cheaper rail/waterway routes. PM GatiShakti is a GIS-based digital platform that integrates national planning. The framework fails when local state-level execution delays, land acquisition hurdles, and state utility clearances bottleneck the centralized planning."
+  }
+},
+  {
+  "id": "ops-manufacturing-4",
+  "title": "Manufacturing 4.0 & Smart Factory",
+  "category": "Optimization",
+  "altitude": {
+    "hook": "Manufacturing 4.0 is the integration of IoT sensors and data analytics into factory lines.",
+    "plain": "Traditional factories rely on manual dials and scheduled checks. A Smart Factory embeds internet-connected sensors into every conveyor belt and robotic arm, allowing computers to monitor vibrations in real-time and predict machine wear before a break occurs.",
+    "depth": "The Fourth Industrial Revolution integrates IoT, cyber-physical systems, cloud computing, and AI. Digital twins (virtual models of physical lines) allow simulation-based testing. Real-time data streams improve OEE and minimize cycle times. Smart factories fail when firms invest in expensive IoT hardware without hiring the data analysts and database structures required to interpret the sensor data streams."
+  }
+},
+  {
+  "id": "ops-reverse-logistics",
+  "title": "Reverse Logistics",
+  "category": "SCM",
+  "altitude": {
+    "hook": "Reverse logistics is the supply chain required to handle customer returns.",
+    "plain": "A standard supply chain is a one-way highway from factory to customer. Reverse logistics is the complex network of detours and processing centers needed when a customer returns a shirt on Amazon. The brand must check, clean, repackage, or recycle the returned item to recover value.",
+    "depth": "With e-commerce return rates hitting 20-30% (compared to 8% in physical retail), reverse logistics is a major margin swing factor. It requires specialized returns processing facilities (3PL centers) and automated sorting logic. Value recovery depends on product shelf life. Reverse logistics systems fail when the return processing cost exceeds the residual value of the product, resulting in inventory write-offs."
+  }
+},
+  {
     id: 'ops-lean',
     title: 'Lean and the 8 Wastes',
     category: 'Process Excellence',

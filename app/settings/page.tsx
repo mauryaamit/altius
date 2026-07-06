@@ -1,9 +1,13 @@
 'use client'
 import React, { useState } from 'react'
 import { Settings, RefreshCw, Trash2, Shield, User, HelpCircle } from 'lucide-react'
+import { useMbaStore } from '@/lib/stores/mbaStore'
 
 export default function SettingsPage() {
   const [resetStatus, setResetStatus] = useState('')
+  const [notesStatus, setNotesStatus] = useState('')
+  const [journalStatus, setJournalStatus] = useState('')
+  const { textSize, setTextSize, clearNotes, clearJournal } = useMbaStore()
 
   const handleResetStreak = () => {
     if (confirm('Are you sure you want to reset your daily streak? This action cannot be undone.')) {
@@ -12,6 +16,34 @@ export default function SettingsPage() {
       setTimeout(() => {
         window.location.reload()
       }, 1500)
+    }
+  }
+
+  const handleClearNotes = async () => {
+    if (confirm('Are you sure you want to delete all notes? This cannot be undone.')) {
+      try {
+        setNotesStatus('Clearing notes...')
+        await clearNotes()
+        setNotesStatus('All notes cleared successfully.')
+        setTimeout(() => setNotesStatus(''), 2000)
+      } catch (err) {
+        console.error(err)
+        setNotesStatus('Failed to clear notes.')
+      }
+    }
+  }
+
+  const handleClearJournal = async () => {
+    if (confirm('Are you sure you want to delete all journal entries? This cannot be undone.')) {
+      try {
+        setJournalStatus('Clearing journal...')
+        await clearJournal()
+        setJournalStatus('All journal entries cleared successfully.')
+        setTimeout(() => setJournalStatus(''), 2000)
+      } catch (err) {
+        console.error(err)
+        setJournalStatus('Failed to clear journal.')
+      }
     }
   }
 
@@ -46,6 +78,29 @@ export default function SettingsPage() {
           </div>
         </section>
 
+        {/* Reading Size Controls */}
+        <section className="settings-section">
+          <div className="section-title-row">
+            <span className="font-mono text-mono-label text-mba-accent uppercase tracking-widest block">Reading Size</span>
+          </div>
+          <div className="section-body">
+            <p className="description text-caption text-mba-ink-soft mb-4">
+              Adjust the typography size of content articles, case studies, and reading materials for comfort.
+            </p>
+            <div className="size-pills font-mono text-mono-label">
+              {(['compact', 'default', 'large'] as const).map((size) => (
+                <button
+                  key={size}
+                  onClick={() => setTextSize(size)}
+                  className={`pill-btn ${textSize === size ? 'active' : ''}`}
+                >
+                  {size.toUpperCase()}
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* Security & Data admin */}
         <section className="settings-section">
           <div className="section-title-row">
@@ -57,11 +112,27 @@ export default function SettingsPage() {
               Local user data is saved on this device to calculate spaced-repetition recalls and maintain streaks. Use these controls to clear cached states.
             </p>
             
-            <div className="action-row">
-              <button onClick={handleResetStreak} className="action-btn danger font-mono text-mono-label">
-                <Trash2 size={12} className="mr-1" /> Reset Local State
-              </button>
-              {resetStatus && <span className="status-msg font-mono text-mono-label ml-3">{resetStatus}</span>}
+            <div className="action-row gap-4" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+                <button onClick={handleResetStreak} className="action-btn danger font-mono text-mono-label">
+                  <Trash2 size={12} className="mr-1" /> Reset Local State
+                </button>
+                {resetStatus && <span className="status-msg font-mono text-mono-label ml-3">{resetStatus}</span>}
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+                <button onClick={handleClearNotes} className="action-btn danger font-mono text-mono-label">
+                  <Trash2 size={12} className="mr-1" /> Clear All Notes
+                </button>
+                {notesStatus && <span className="status-msg font-mono text-mono-label ml-3">{notesStatus}</span>}
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+                <button onClick={handleClearJournal} className="action-btn danger font-mono text-mono-label">
+                  <Trash2 size={12} className="mr-1" /> Clear All Journal Entries
+                </button>
+                {journalStatus && <span className="status-msg font-mono text-mono-label ml-3">{journalStatus}</span>}
+              </div>
             </div>
           </div>
         </section>
@@ -181,6 +252,33 @@ export default function SettingsPage() {
 
         .status-msg {
           color: var(--mba-success);
+        }
+
+        .size-pills {
+          display: flex;
+          gap: var(--space-3);
+        }
+
+        .pill-btn {
+          padding: var(--space-2) var(--space-4);
+          border-radius: var(--radius-sm);
+          border: 1px solid var(--mba-rule);
+          background: var(--mba-surface-sunk);
+          color: var(--mba-ink-soft);
+          cursor: pointer;
+          font-weight: 600;
+          transition: all 150ms ease;
+        }
+
+        .pill-btn:hover {
+          color: var(--mba-ink);
+          border-color: var(--mba-ink-soft);
+        }
+
+        .pill-btn.active {
+          background: var(--mba-accent);
+          color: var(--mba-surface);
+          border-color: var(--mba-accent);
         }
       `}</style>
     </div>

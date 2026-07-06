@@ -7,7 +7,7 @@ import { useMbaStore } from '@/lib/stores/mbaStore'
 import { DateNav } from '@/components/DateNav'
 import { toISODate } from '@/lib/getDayIndex'
 import { getGDTopicForDate } from '@/lib/content/getDynamicContent'
-import { Bookmark } from 'lucide-react'
+import { Bookmark, Heart } from 'lucide-react'
 
 const GD_FILTERS: GDTag[] = ['Current', 'Business', 'Abstract', 'Tech', 'Ethics']
 
@@ -63,7 +63,8 @@ export default function GDPage() {
       <div className="gd-topics-list">
         {activeTopics.map((topic) => {
           const ledgerId = `gd-arena_gdTopic_${topic.tag.toLowerCase()}_${dateStr}`
-          const fav = isFavorite(ledgerId)
+          const isHeart = isFavorite(ledgerId, 'heart')
+          const isBookmark = isFavorite(ledgerId, 'bookmark')
 
           return (
             <article key={topic.topic} className="gd-topic">
@@ -76,14 +77,24 @@ export default function GDPage() {
                     {topic.tag}
                   </span>
                   
-                  <button
-                    onClick={() => toggleFavorite(ledgerId, 'gd-arena', 'gdTopic')}
-                    className="fav-toggle-btn"
-                    aria-label={fav ? 'Remove from favorites' : 'Add to favorites'}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: fav ? 'var(--mba-accent)' : 'var(--mba-ink-faint)' }}
-                  >
-                    <Bookmark size={18} fill={fav ? 'var(--mba-accent)' : 'none'} />
-                  </button>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+                    <button
+                      onClick={() => toggleFavorite(ledgerId, 'gd-arena', 'gdTopic', 'heart')}
+                      className="fav-toggle-btn"
+                      aria-label={isHeart ? 'Remove from favorites' : 'Add to favorites'}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: isHeart ? 'var(--mba-accent)' : 'var(--mba-ink-faint)', display: 'flex', alignItems: 'center' }}
+                    >
+                      <Heart size={15} fill={isHeart ? 'var(--mba-accent)' : 'none'} />
+                    </button>
+                    <button
+                      onClick={() => toggleFavorite(ledgerId, 'gd-arena', 'gdTopic', 'bookmark')}
+                      className="fav-toggle-btn"
+                      aria-label={isBookmark ? 'Remove from bookmarks' : 'Add to bookmarks'}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: isBookmark ? 'var(--mba-accent)' : 'var(--mba-ink-faint)', display: 'flex', alignItems: 'center' }}
+                    >
+                      <Bookmark size={15} fill={isBookmark ? 'var(--mba-accent)' : 'none'} />
+                    </button>
+                  </div>
                 </div>
                 <h2 className="font-display gd-headline">{topic.topic}</h2>
               </div>

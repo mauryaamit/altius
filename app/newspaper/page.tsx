@@ -1,7 +1,7 @@
 'use client'
 import React, { useState, useMemo } from 'react'
 import { TabBar } from '@/components/TabBar'
-import { Calendar, Bookmark } from 'lucide-react'
+import { Calendar, Bookmark, Heart } from 'lucide-react'
 import { useMbaStore } from '@/lib/stores/mbaStore'
 import { DateNav } from '@/components/DateNav'
 import { toISODate } from '@/lib/getDayIndex'
@@ -62,7 +62,8 @@ export default function NewspaperPage() {
           <div className="stories-stack">
             {briefs.map((story) => {
               const ledgerId = `newspaper_newspaperBrief_${story.id}_${dateStr}`
-              const fav = isFavorite(ledgerId)
+              const isHeart = isFavorite(ledgerId, 'heart')
+              const isBookmark = isFavorite(ledgerId, 'bookmark')
 
               return (
                 <article key={story.id} className="story-card">
@@ -75,14 +76,24 @@ export default function NewspaperPage() {
                       </span>
                     </div>
 
-                    <button
-                      onClick={() => toggleFavorite(ledgerId, 'newspaper', 'newspaperBrief')}
-                      className="fav-toggle-btn"
-                      aria-label={fav ? 'Remove from favorites' : 'Add to favorites'}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: fav ? 'var(--mba-accent)' : 'var(--mba-ink-faint)' }}
-                    >
-                      <Bookmark size={16} fill={fav ? 'var(--mba-accent)' : 'none'} />
-                    </button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+                      <button
+                        onClick={() => toggleFavorite(ledgerId, 'newspaper', 'newspaperBrief', 'heart')}
+                        className="fav-toggle-btn"
+                        aria-label={isHeart ? 'Remove from favorites' : 'Add to favorites'}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: isHeart ? 'var(--mba-accent)' : 'var(--mba-ink-faint)', display: 'flex', alignItems: 'center' }}
+                      >
+                        <Heart size={15} fill={isHeart ? 'var(--mba-accent)' : 'none'} />
+                      </button>
+                      <button
+                        onClick={() => toggleFavorite(ledgerId, 'newspaper', 'newspaperBrief', 'bookmark')}
+                        className="fav-toggle-btn"
+                        aria-label={isBookmark ? 'Remove from bookmarks' : 'Add to bookmarks'}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: isBookmark ? 'var(--mba-accent)' : 'var(--mba-ink-faint)', display: 'flex', alignItems: 'center' }}
+                      >
+                        <Bookmark size={15} fill={isBookmark ? 'var(--mba-accent)' : 'none'} />
+                      </button>
+                    </div>
                   </div>
 
                   <h3 className="story-headline font-display text-h3 text-mba-ink">
@@ -116,21 +127,32 @@ export default function NewspaperPage() {
           <div className="stories-stack">
             {businessNews.map((card) => {
               const ledgerId = `newspaper_businessNews_${card.id}_${dateStr}`
-              const fav = isFavorite(ledgerId)
+              const isHeart = isFavorite(ledgerId, 'heart')
+              const isBookmark = isFavorite(ledgerId, 'bookmark')
 
               return (
                 <article key={card.id} className="story-card">
                   <div className="story-meta font-mono text-mono-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span className="story-outlet">Business Pulse</span>
 
-                    <button
-                      onClick={() => toggleFavorite(ledgerId, 'newspaper', 'businessNews')}
-                      className="fav-toggle-btn"
-                      aria-label={fav ? 'Remove from favorites' : 'Add to favorites'}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: fav ? 'var(--mba-accent)' : 'var(--mba-ink-faint)' }}
-                    >
-                      <Bookmark size={16} fill={fav ? 'var(--mba-accent)' : 'none'} />
-                    </button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+                      <button
+                        onClick={() => toggleFavorite(ledgerId, 'newspaper', 'businessNews', 'heart')}
+                        className="fav-toggle-btn"
+                        aria-label={isHeart ? 'Remove from favorites' : 'Add to favorites'}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: isHeart ? 'var(--mba-accent)' : 'var(--mba-ink-faint)', display: 'flex', alignItems: 'center' }}
+                      >
+                        <Heart size={15} fill={isHeart ? 'var(--mba-accent)' : 'none'} />
+                      </button>
+                      <button
+                        onClick={() => toggleFavorite(ledgerId, 'newspaper', 'businessNews', 'bookmark')}
+                        className="fav-toggle-btn"
+                        aria-label={isBookmark ? 'Remove from bookmarks' : 'Add to bookmarks'}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: isBookmark ? 'var(--mba-accent)' : 'var(--mba-ink-faint)', display: 'flex', alignItems: 'center' }}
+                      >
+                        <Bookmark size={15} fill={isBookmark ? 'var(--mba-accent)' : 'none'} />
+                      </button>
+                    </div>
                   </div>
 
                   <h3 className="story-headline font-display text-h3 text-mba-ink">

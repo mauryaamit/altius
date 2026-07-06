@@ -2,6 +2,106 @@ import type { ConceptEntry, CaseContent, HotTopicContent, ThinkContent, LibraryE
 
 export const financeConcepts: ConceptEntry[] = [
   {
+  "id": "fin-lbo-mech",
+  "title": "Leveraged Buyout Mechanics",
+  "category": "Corporate Finance",
+  "altitude": {
+    "hook": "LBO is buying a house using a massive mortgage, then letting the tenant pay it off.",
+    "plain": "An LBO is a corporate acquisition where the buyer funds the purchase mostly with borrowed money (70-80% debt) and only a small sliver of their own cash (equity). The buyer uses the target company's assets as collateral for the loans and uses the target's operating cash flow to pay down the debt over time.",
+    "depth": "Leveraged Buyouts (LBOs) aim to maximize the sponsor's Internal Rate of Return (IRR) on equity. By minimizing the upfront equity check, any debt paydown and enterprise value growth yields high equity multipliers. Debt is typically split into Senior Secured (bank loans, low interest) and Subordinated/Mezzanine (high yield, higher interest). Ideal candidates have stable cash flows, low CapEx, and clean balance sheets. An LBO fails when the target faces an unexpected downturn and cash flows contract, triggering covenant defaults. It misleads when assuming historical cash flow stability continues under high debt interest loads."
+  }
+},
+  {
+  "id": "fin-pe-value",
+  "title": "Private Equity Value Creation",
+  "category": "Corporate Finance",
+  "altitude": {
+    "hook": "PE value creation has shifted from financial leverage to operational optimization.",
+    "plain": "Imagine buying a neglected apartment building. You don't just wait for property values to rise; you repaint, fix the plumbing, install smart locks, and raise the rent. Private Equity firms create value by restructuring corporate operations, expanding markets, and streamlining cost structures.",
+    "depth": "Value creation in PE is broken down into three levers: Multiple Expansion (selling at a higher EV/EBITDA than buy price), Debt Paydown (deleveraging), and EBITDA Growth (operational optimization). Historically, multiple expansion and high leverage drove returns. Today, EBITDA growth is the primary driver. Operations teams implement add-on acquisitions (roll-ups), renegotiate procurement, and improve pricing models. It fails when PE sponsors implement short-term cost cuts (e.g. cutting R&D) that starve long-term growth, depressing exit multiples."
+  }
+},
+  {
+  "id": "fin-ipo-process",
+  "title": "IPO Process and Underpricing",
+  "category": "Capital Markets",
+  "altitude": {
+    "hook": "IPO underpricing is the money left on the table to guarantee listing pop and investor interest.",
+    "plain": "When a company list shares on the stock exchange (IPO) for the first time, the investment bankers often price the shares slightly lower than what they believe the market will pay. This intentional discount ensures a 'listing pop' (price surge) on day one, generating positive press and happy institutional investors.",
+    "depth": "The Initial Public Offering (IPO) process involves bookbuilding, regulatory clearances (SEBI/SEC), and price band declarations. Underpricing (the difference between IPO offer price and first-day close) is conceptually explained by the 'Winner's Curse' (asymmetric information where uninformed investors only get allocations when issues are unpopular). Bankers underprice to protect against regulatory liabilities and secure future banking business. A famous example is the LIC IPO, where pricing was adjusted to secure retail demand. Underpricing fails the issuing company by reducing the primary capital they raise, effectively diluting founders unnecessarily."
+  }
+},
+  {
+  "id": "fin-credit-fund",
+  "title": "Credit Analysis Fundamentals",
+  "category": "Analysis",
+  "altitude": {
+    "hook": "Credit analysis is the science of measuring default probability and recovery rates.",
+    "plain": "If you lend money to a friend, you evaluate if they have a steady job to pay you back (capacity), what assets they own if they default (collateral), and their historical reliability (character). Credit analysts use financial statements to systematically grade a company's ability to service interest and principal.",
+    "depth": "Credit analysts evaluate the '5 Cs': Character, Capacity, Capital, Collateral, and Conditions. Key metrics include Leverage Ratios (Debt/EBITDA, Interest Coverage = EBIT/Interest) and Liquidity Ratios (Current Ratio, Quick Ratio). They model default probability (PD) and Loss Given Default (LGD). Unlike equity, credit upside is capped at the interest rate, making downside protection paramount. Analysis fails when it relies on trailing historical cash flows during sudden structural shifts (e.g. telecom disruption), or when assets used as collateral are overvalued."
+  }
+},
+  {
+  "id": "fin-options-basic",
+  "title": "Options Basics (Call & Put)",
+  "category": "Capital Markets",
+  "altitude": {
+    "hook": "Options are insurance contracts that let you bet on stock movements with capped downside.",
+    "plain": "A call option is a ticket that lets you buy a house for Rs. 50 lakhs next month, even if house prices jump to Rs. 70 lakhs. A put option is a ticket that lets you sell your house for Rs. 50 lakhs next month, protecting you even if the neighborhood market crashes to Rs. 30 lakhs. You pay a small fee (premium) to buy this protection.",
+    "depth": "Options are derivative contracts. A Call Option gives the buyer the right (not obligation) to buy an asset at a Strike Price before expiration. A Put Option gives the right to sell. Sellers (writers) receive the premium but take on unlimited liability. Options are used for hedging risk or leveraging bets. The premium price is determined by the Black-Scholes model, driven by stock price, strike, time to expiry, risk-free rate, and volatility. Options trading fails retail investors who treat them as lottery tickets, ignoring the rapid time decay (Theta) of options premiums."
+  }
+},
+  {
+  "id": "fin-fintech-disruption",
+  "title": "FinTech Disruption of Banking",
+  "category": "Capital Markets",
+  "altitude": {
+    "hook": "FinTech unbundles traditional banking by isolating and digitizing individual product lines.",
+    "plain": "Traditional banks are like physical department stores where you get home loans, checking accounts, credit cards, and investments under one roof. FinTech startups act as specialized digital boutiques that take just one product (like payments via UPI, or mutual funds via Zerodha) and make it 10x faster and cheaper.",
+    "depth": "FinTech unbundles the bank's value chain, targeting high-margin services. Startups use alternative data (digital transaction logs, phone bills) to score credit risk, bypassing traditional credit bureaus. However, banks retain structural advantages: low cost of funds (CASA deposits) and regulatory licenses. This has led to the rise of Co-Lending models (FinTech acts as the customer acquisition layer, banks fund the loan). Disruption fails when FinTechs face high customer acquisition costs (CAC) at scale, or regulatory crackdowns (like RBI actions on prepaid instruments)."
+  }
+},
+  {
+  "id": "fin-esg-investing",
+  "title": "ESG Investing",
+  "category": "Valuation",
+  "altitude": {
+    "hook": "ESG integrates non-financial risks into standard corporate valuation models.",
+    "plain": "Imagine investing in a chemical factory. You don't just look at their current balance sheet; you evaluate if they dump toxic waste in local rivers (Environmental), treat their laborers fairly (Social), and have independent audits on their board (Governance) to predict future fines and consumer boycotts.",
+    "depth": "Environmental, Social, and Governance (ESG) investing evaluates 'non-financial' factors to identify tail risks that standard financial accounting misses. It models how climate regulations, supply chain labor standards, and executive compensation impact cost of capital (WACC) and asset impairment. ESG ratings agencies provide scores used by institutional asset managers. The framework fails due to 'greenwashing' (cosmetic compliance) and lack of standardized metrics. It misleads when investors sacrifice financial returns for high-ESG scores that do not correlate with material cash flow resilience."
+  }
+},
+  {
+  "id": "fin-gst-working",
+  "title": "GST Impact on Working Capital",
+  "category": "Corporate Finance",
+  "altitude": {
+    "hook": "GST shifts tax liability from manufacturing to consumption, changing cash flow timing.",
+    "plain": "Before GST in India, manufacturers paid tax when goods left the factory gate, locking up cash in inventory. Under GST, tax is collected at the point of sale. This changes when cash leaves the company's bank account, directly impacting how much money is tied up in raw materials, work-in-progress, and finished stock.",
+    "depth": "The Goods and Services Tax (GST) is a destination-based, multi-stage tax. Working capital is impacted by the Input Tax Credit (ITC) mechanism. Companies can only claim tax credits if their suppliers upload invoices to the GST network. Delay in supplier filing creates a cash flow lag, forcing buyers to fund working capital deficits. Additionally, taxes must be paid on advances received and stock transfers between states. It fails small vendors who lack the accounting bandwidth to reconcile invoices rapidly, leading to working capital lockouts."
+  }
+},
+  {
+  "id": "fin-rbi-policy",
+  "title": "RBI Monetary Policy Transmission",
+  "category": "Capital Markets",
+  "altitude": {
+    "hook": "Monetary transmission is the process by which RBI rate cuts actually reach retail borrowers.",
+    "plain": "When the Reserve Bank of India cuts interest rates (Repo rate), it's like a wholesaler lowering the price of sugar. However, retail shoppers don't get cheaper sugar until the local supermarkets (commercial banks) choose to lower their prices. Transmission is the speed and extent of this retail bank reaction.",
+    "depth": "The Repo Rate is the rate at which RBI lends money to commercial banks. When RBI changes rates, it intends to control inflation or support growth. In India, transmission is historically lagged and incomplete. Banks maintain high deposit rates to fund long-term loans, preventing them from instantly cutting lending rates. The transition to MCLR (Marginal Cost of Funds based Lending Rate) and EBLR (External Benchmark Linked Rate) aimed to automate this transmission. It fails when bank liquidity is tight, forcing them to keep loan rates high despite RBI repo cuts."
+  }
+},
+  {
+  "id": "fin-startup-stages",
+  "title": "Startup Financing Stages",
+  "category": "Corporate Finance",
+  "altitude": {
+    "hook": "Startup financing matches risk levels with different pools of specialized capital.",
+    "plain": "Starting a business is like growing a tree. At first, you use your own water and seeds (Pre-Seed/Seed). As the sprout grows, you get local organic fertilizers (Angel/Venture Debt). Once the tree bears fruit and needs to scale to an orchard, you bring in massive industrial farming conglomerates (Series A/B Venture Capital and PE).",
+    "depth": "Startup financing maps institutional rounds: Seed (product-market validation), Series A (unit economic proof), Series B/C (scaling operations), and Growth/Pre-IPO. Valuation methods transition from qualitative scorecard models to quantitative multiples (EV/Sales, EV/EBITDA). Round economics involve dilution math, liquidation preferences, and anti-dilution provisions. Startup financing fails when companies raise too much capital at inflated valuations, creating down-round risks when operating metrics fail to justify the hurdle."
+  }
+},
+  {
     id: 'fin-npv-irr',
     title: 'NPV and IRR',
     category: 'Valuation',

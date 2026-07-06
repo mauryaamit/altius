@@ -1,18 +1,10 @@
-'use client'
 import React from 'react'
-import type { Specialization, CompanySpotlightContent } from '@/lib/content/types'
-import { marketingCompany } from '@/lib/content/marketing'
-import { financeCompany } from '@/lib/content/finance'
-import { consultingCompany } from '@/lib/content/consulting'
-import { operationsCompany } from '@/lib/content/operations'
-import { strategyCompany } from '@/lib/content/strategy'
-import { peopleCompany } from '@/lib/content/people'
+import type { Specialization } from '@/lib/content/types'
 import { useMbaStore } from '@/lib/stores/mbaStore'
-import { getDynamicContentForDate } from '@/lib/content/getDynamicContent'
 import { Citation } from '@/components/Citation'
-import { toISODate } from '@/lib/getDayIndex'
-
-import { Bookmark } from 'lucide-react'
+import { Bookmark, Heart } from 'lucide-react'
+import { NoteEditor } from '@/components/NoteEditor'
+import { useDailyContent } from '@/lib/hooks/useDailyContent'
 
 const chipColorMap: Record<Specialization, string> = {
   marketing:   'var(--chip-marketing)',
@@ -30,23 +22,34 @@ interface CompanyTabProps {
 export function CompanyTab({ specialization }: CompanyTabProps) {
   const { activeDate, toggleFavorite, isFavorite } = useMbaStore()
   const currentDate = activeDate ? new Date(activeDate) : new Date()
-  const data = getDynamicContentForDate('company', specialization, currentDate) as any
+  const dateStr = currentDate.toISOString().slice(0, 10)
+  const ledgerId = `${specialization}_companySpotlight__${dateStr}`
+  
+  const { data, loading, error } = useDailyContent<any>(specialization, 'companySpotlight', currentDate)
   const chipColor = chipColorMap[specialization] || 'var(--mba-accent)'
 
-  if (!data) {
+  if (loading) {
     return (
-      <div className="empty-state font-body text-caption text-mba-ink-faint p-8">
-        No Company Spotlight available for this category today.
+      <div className="font-body text-caption text-mba-ink-faint p-8 animate-pulse text-center">
+        Loading today's fresh briefing...
+      </div>
+    )
+  }
+
+  if (error || !data) {
+    return (
+      <div className="font-body text-caption text-mba-ink-faint p-8 text-center">
+        Failed to load content. Gracefully recovering...
       </div>
     )
   }
 
   const getCitation = (id: number) => {
-    return data.citations.find((c: any) => c.id === id)
+    return data.citations?.find((c: any) => c.id === id)
   }
 
-  const ledgerId = `${specialization}_companySpotlight__${toISODate(currentDate)}`
-  const fav = isFavorite(ledgerId)
+  const isHeart = isFavorite(ledgerId, 'heart')
+  const isBookmark = isFavorite(ledgerId, 'bookmark')
 
   return (
     <article className="company-spotlight" style={{ '--chip-color': chipColor } as React.CSSProperties}>
@@ -57,14 +60,24 @@ export function CompanyTab({ specialization }: CompanyTabProps) {
           <span className="font-mono text-mono-label text-mba-ink-faint uppercase tracking-widest block" style={{ margin: 0 }}>
             Company Spotlight
           </span>
-          <button
-            onClick={() => toggleFavorite(ledgerId, specialization, 'companySpotlight')}
-            className="fav-toggle-btn"
-            aria-label={fav ? 'Remove from favorites' : 'Add to favorites'}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: fav ? 'var(--mba-accent)' : 'var(--mba-ink-faint)' }}
-          >
-            <Bookmark size={16} fill={fav ? 'var(--mba-accent)' : 'none'} />
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+            <button
+              onClick={() => toggleFavorite(ledgerId, specialization, 'companySpotlight', 'heart')}
+              className="fav-toggle-btn"
+              aria-label={isHeart ? 'Remove from favorites' : 'Add to favorites'}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: isHeart ? 'var(--mba-accent)' : 'var(--mba-ink-faint)', display: 'flex', alignItems: 'center' }}
+            >
+              <Heart size={15} fill={isHeart ? 'var(--mba-accent)' : 'none'} />
+            </button>
+            <button
+              onClick={() => toggleFavorite(ledgerId, specialization, 'companySpotlight', 'bookmark')}
+              className="fav-toggle-btn"
+              aria-label={isBookmark ? 'Remove from bookmarks' : 'Add to bookmarks'}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: isBookmark ? 'var(--mba-accent)' : 'var(--mba-ink-faint)', display: 'flex', alignItems: 'center' }}
+            >
+              <Bookmark size={15} fill={isBookmark ? 'var(--mba-accent)' : 'none'} />
+            </button>
+          </div>
         </div>
         <h2 className="font-display company-name text-h2 text-mba-ink mb-2">
           {data.companyName}
@@ -145,6 +158,13 @@ export function CompanyTab({ specialization }: CompanyTabProps) {
           {data.whyItMatters}
         </p>
       </section>
+
+      <NoteEditor
+        contentRef={ledgerId}
+        contentTitle={data.companyName}
+        contentType="companySpotlight"
+        page={specialization}
+      />
 
       <style jsx>{`
         .company-spotlight {

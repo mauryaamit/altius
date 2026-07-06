@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { Menu, X, Home, Activity, Calculator, BookOpen, User, Settings, Shield } from 'lucide-react'
 import { Logo } from '@/components/Logo'
+import { useMbaStore } from '@/lib/stores/mbaStore'
 
 interface AltiusShellProps {
   children: React.ReactNode
@@ -39,6 +40,8 @@ const referenceItems: NavItem[] = [
 
 const youItems: NavItem[] = [
   { label: 'Favorites',  href: '/favorites' },
+  { label: 'Notes',      href: '/notes' },
+  { label: 'Journal',    href: '/journal' },
   { label: 'Progress',   href: '/progress' },
   { label: 'Settings',   href: '/settings' },
 ]
@@ -63,6 +66,14 @@ export function AltiusShell({ children }: AltiusShellProps) {
   useEffect(() => {
     setDrawerOpen(false)
   }, [pathname])
+
+  // Load and apply reading text scale
+  const textSize = useMbaStore((state) => state.textSize) || 'default'
+  useEffect(() => {
+    const scaleMap = { compact: '0.9', default: '1.0', large: '1.15' }
+    const scaleVal = scaleMap[textSize] || '1.0'
+    document.documentElement.style.setProperty('--reading-scale', scaleVal)
+  }, [textSize])
 
   // Trap focus inside drawer when open
   useEffect(() => {

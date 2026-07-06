@@ -7,6 +7,106 @@ import type {
 
 export const marketingConcepts: ConceptEntry[] = [
   {
+  "id": "mktg-ansoff",
+  "title": "Ansoff Matrix",
+  "category": "Strategy",
+  "altitude": {
+    "hook": "Ansoff Matrix is the strategic compass for deciding where growth will come from.",
+    "plain": "Imagine you are running a restaurant. You can grow by selling more of the same dishes to your regular diners (Market Penetration), introducing new dishes to your regular diners (Product Development), attracting new customers from a different neighborhood to eat your existing dishes (Market Development), or launching a completely new retail line of packaged spices in another city (Diversification). Ansoff organizes these options on a 2x2 grid.",
+    "depth": "Originally formulated by Igor Ansoff in 1957, the grid maps Products (Existing vs. New) against Markets (Existing vs. New). The four quadrants represent different levels of strategic risk. Market Penetration has the lowest risk but limited upside. Product Development and Market Development have moderate risk. Diversification has the highest risk because it requires new operational capabilities. A classic failure of Diversification is Quaker Oats acquiring Snapple, expecting synergy between breakfast cereal and bottled tea, which failed due to incompatible distribution systems. The framework misleads when firms underestimate the execution complexity of new markets."
+  }
+},
+  {
+  "id": "mktg-imc",
+  "title": "Integrated Marketing Communications",
+  "category": "Branding",
+  "altitude": {
+    "hook": "IMC ensures your brand speaks with one voice across all customer touchpoints.",
+    "plain": "Imagine a musical orchestra where the brass, woodwinds, and strings all play different tunes simultaneously; it sounds like noise. In marketing, if your TV ad represents luxury, your social media feed is goofy, and your instore display is cheap, customers get confused. IMC is the conductor that coordinates all channels so they play the same cohesive tune.",
+    "depth": "Integrated Marketing Communications (IMC) is a strategic process that aligns advertising, public relations, direct marketing, sales promotions, and digital channels under a single unified brand message. Rather than running isolated campaigns, IMC synchronizes messaging so that each contact point reinforces the others. For example, Apple's 'Shot on iPhone' campaign seamlessly connected outdoor billboards, user-generated Instagram posts, television ads, and retail store displays. IMC fails when organization silos prevent departments (PR, social, performance ads) from collaborating, resulting in fragmented brand expressions."
+  }
+},
+  {
+  "id": "mktg-influencer",
+  "title": "Influencer Marketing Economics",
+  "category": "Strategy",
+  "altitude": {
+    "hook": "Influencer economics is about buying authentic trust at scale instead of impressions.",
+    "plain": "If a billboard tells you a skincare product is amazing, you ignore it because it's a paid advertisement. If your close friend recommends the same product, you buy it because you trust them. Influencer marketing scale utilizes creators who build micro-trust with their followers, turning peer recommendations into commercial scale.",
+    "depth": "Influencer marketing leverages creators categorized by reach: nano (1k-10k), micro (10k-100k), macro (100k-1m), and mega (1m+). The economics are shifting from simple cost-per-thousand (CPM) views to Cost Per Acquisition (CPA) and attribution modeling. While mega-influencers build mass awareness, micro-influencers often deliver 3x higher engagement rates due to localized niche trust. A common pitfall is the failure to measure click-through fraud and fake followers. The framework fails when brands force influencers into overly scripted corporate messaging, destroying the authenticity that makes their endorsement valuable."
+  }
+},
+  {
+  "id": "mktg-pricing-deep",
+  "title": "Pricing Strategy Deep-Dive",
+  "category": "Strategy",
+  "altitude": {
+    "hook": "Pricing is the fastest lever to drive bottom-line margin growth.",
+    "plain": "Pricing is like choosing how to sell tickets to a movie. You can charge a flat rate based on production cost (cost-plus), charge high initial rates to early enthusiasts before lowering it (skimming), charge very low prices to capture the whole theater first (penetration), or dynamically change prices based on peak seat demand (dynamic).",
+    "depth": "Pricing strategies dictate value capture. Cost-plus pricing ignores customer willingness-to-pay. Value-based pricing models utility (e.g. software saving 10 hours a week). Skimming works for innovation-led monopolies (Apple iPhone launch). Penetration pricing bootstraps network effects (Reliance Jio's free data launch). Dynamic pricing matches spot supply and demand (airlines). A classic failure of penetration pricing is when the brand is permanently cheapened, preventing them from raising prices later. Pricing fails when it ignores competitor price match actions or customer backlash against dynamic surges."
+  }
+},
+  {
+  "id": "mktg-wallet-market",
+  "title": "Share of Wallet vs. Share of Market",
+  "category": "Analytics",
+  "altitude": {
+    "hook": "Share of wallet measures customer loyalty, while share of market measures reach.",
+    "plain": "If you buy 10 coffees a month and get 2 from Starbucks, Starbucks has 20% of your wallet. If Starbucks sells 2 out of every 10 coffees bought in your entire city, they have 20% of the market. Growing share of wallet means getting regular customers to buy more, whereas growing market share means acquiring brand new customers.",
+    "depth": "Share of Market (SOM) is the percentage of total industry sales a brand captures. Share of Wallet (SOW) is the percentage of an individual customer's category spending dedicated to the brand. SOW growth is often 5x cheaper than SOM growth because it targets existing high-retention customers who already trust the brand. For example, Amazon prime video increases share of wallet for Prime subscribers. This framework misleads when brands focus exclusively on SOW for a small, declining cohort of customers, ignoring the necessity of SOM acquisition to replenish the funnel."
+  }
+},
+  {
+  "id": "mktg-vals",
+  "title": "VALS Framework",
+  "category": "Segmentation",
+  "altitude": {
+    "hook": "VALS segments customers by internal psychological drivers instead of age or income.",
+    "plain": "Imagine three people who all earn Rs. 1 lakh a month. One buys a luxury watch to show success (Achiever), another buys hiking gear to seek adventure (Experiencer), and the third buys organic seeds to build a self-reliant garden (Maker). VALS groups them by their psychological motivations rather than their demographic profiles.",
+    "depth": "Developed by SRI International in 1978, VALS (Values, Attitudes, and Lifestyles) maps consumers along primary motivation (Ideals, Achievement, or Self-Expression) and resources/innovation level. The categories range from Innovators (high resources) to Survivors (low resources). It explains why demographic targeting fails for considered purchases. For example, Patagonia targets Ideals-motivated survivors and innovators alike. VALS fails when used for low-involvement commodity goods (e.g. salt, garbage bags) where purchase behavior is driven strictly by price and availability rather than values."
+  }
+},
+  {
+  "id": "mktg-loyalty-econ",
+  "title": "Loyalty Program Economics",
+  "category": "Analytics",
+  "altitude": {
+    "hook": "Loyalty programs are data acquisition systems disguised as reward mechanisms.",
+    "plain": "If a supermarket gives you points for buying milk, they are not just trying to make you happy. They are offering you a discount in exchange for your permission to track every single item you buy, allowing them to build a detailed database of your household habits.",
+    "depth": "Loyalty economics balance Liability Accrual (points issued must be carried on the balance sheet as deferred revenue) against Customer Lifetime Value (CLV) expansion. Successful programs leverage the 'Endowed Progress Effect' (giving a headstart increases completion rates) and tier locks (e.g. Gold status). The data collected allows predictive CRM, optimizing margin. For example, Starbucks Rewards drives prepay float cash exceeding $1 Billion. Loyalty programs fail when reward redemption is too complex, frustrating users, or when the cost of rewards exceeds the margin expansion from repeat purchases."
+  }
+},
+  {
+  "id": "mktg-category-mgmt",
+  "title": "Category Management",
+  "category": "Strategy",
+  "altitude": {
+    "hook": "Category management treats product segments as strategic business units on retail shelves.",
+    "plain": "Instead of a shampoo brand trying to sell only their products, category management is when the retailer looks at the entire shampoo shelf as one store department. They decide how much space to give to anti-dandruff vs herbal shampoo to maximize total category sales, not just one brand's revenue.",
+    "depth": "Codified by the Partnering Group in the 1990s, Category Management is a collaborative retailer-supplier process. The retailer appoints a 'Category Captain' (usually the market-leading brand, e.g. Coca-Cola for soda) to design the shelf layout (Planogram). This leverages brand insight but introduces conflict of interest. The category captain may attempt to crowd out challenger brands. It fails when the captain prioritizes their own brand share over the retailer's category margin, leading to trust erosion."
+  }
+},
+  {
+  "id": "mktg-d2c-omni",
+  "title": "D2C vs. Omnichannel Tradeoffs",
+  "category": "Strategy",
+  "altitude": {
+    "hook": "Omnichannel builds scale and convenience, while D2C builds data and relationship.",
+    "plain": "Selling only on your website (D2C) is like running a boutique; you get to know every visitor and keep all the profit, but few people walk by. Selling through supermarkets and Amazon (Omnichannel) is like putting your product in a busy mall; you sell 100x more, but you pay high rent and never meet the buyers.",
+    "depth": "Direct-to-Consumer (D2C) gives brands 100% gross margins, first-party customer data, and control over brand experience. However, digital customer acquisition costs (CAC) scale exponentially, capping reach. Omnichannel distribution (general trade, modern trade, quick commerce) lowers unit margins due to distributor take-rates (35-50%) but delivers massive volume and offline trust. A classic example is cosmetics brand Glossier, which scaled via D2C but was forced to enter Sephora to maintain growth. It fails when brands enter physical trade without pricing structures that support middleman margins."
+  }
+},
+  {
+  "id": "mktg-ad-effect",
+  "title": "Advertising Effectiveness Measurement",
+  "category": "Analytics",
+  "altitude": {
+    "hook": "Advertising effectiveness prevents burning capital on unmeasured impressions.",
+    "plain": "If you buy 10 billboard advertisements in a city, measuring reach (how many unique people drove by), frequency (how many times they saw it), and target ratings (did the right audience see it) tells you if your money was well-spent, rather than just hoping for sales.",
+    "depth": "Ad measurement balances media metrics: Reach (unique audience), Frequency (average exposure count), Gross Rating Points (GRP = Reach x Frequency), and Target Rating Points (TRP). Digital performance adds Return on Ad Spend (ROAS = Revenue / Cost) and Attribution models (Last-Click vs Multi-Touch). The biggest trap is confusing correlation with causation; users who clicked an ad might have bought anyway (Selection Bias). Measuring ad spend effectiveness fails when brands optimize for short-term performance clicks, starving the brand equity needed for long-term pricing power."
+  }
+},
+  {
     id: 'mktg-stp',
     title: 'STP Framework',
     category: 'Segmentation',

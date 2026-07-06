@@ -1,28 +1,38 @@
-import React, { useState } from 'react'
+import React from 'react'
 import type { Specialization } from '@/lib/content/types'
-import { marketingThink } from '@/lib/content/marketing'
-import { financeThink } from '@/lib/content/finance'
-import { consultingThink } from '@/lib/content/consulting'
-import { operationsThink } from '@/lib/content/operations'
-import { strategyThink } from '@/lib/content/strategy'
-import { peopleThink } from '@/lib/content/people'
 import { useMbaStore } from '@/lib/stores/mbaStore'
-import { getDynamicContentForDate } from '@/lib/content/getDynamicContent'
 import { AltitudeBlock } from '@/components/AltitudeBlock'
 import { Callout } from '@/components/Callout'
 import { Citation } from '@/components/Citation'
-import { toISODate } from '@/lib/getDayIndex'
-
-import { Bookmark } from 'lucide-react'
+import { Bookmark, Heart } from 'lucide-react'
+import { NoteEditor } from '@/components/NoteEditor'
+import { useDailyContent } from '@/lib/hooks/useDailyContent'
 
 export function ThinkTab({ specialization }: { specialization: Specialization }) {
   const { activeDate, toggleFavorite, isFavorite } = useMbaStore()
   const currentDate = activeDate ? new Date(activeDate) : new Date()
-  const t = getDynamicContentForDate('think', specialization, currentDate) as any
-  if (!t) return null
+  const dateStr = currentDate.toISOString().slice(0, 10)
+  const ledgerId = `${specialization}_think__${dateStr}`
+  
+  const { data: t, loading, error } = useDailyContent<any>(specialization, 'think', currentDate)
+  const isHeart = isFavorite(ledgerId, 'heart')
+  const isBookmark = isFavorite(ledgerId, 'bookmark')
 
-  const ledgerId = `${specialization}_think__${toISODate(currentDate)}`
-  const fav = isFavorite(ledgerId)
+  if (loading) {
+    return (
+      <div className="font-body text-caption text-mba-ink-faint p-8 animate-pulse text-center">
+        Loading today's fresh briefing...
+      </div>
+    )
+  }
+
+  if (error || !t) {
+    return (
+      <div className="font-body text-caption text-mba-ink-faint p-8 text-center">
+        Failed to load content. Gracefully recovering...
+      </div>
+    )
+  }
 
   return (
     <article aria-label="Think question">
@@ -32,14 +42,24 @@ export function ThinkTab({ specialization }: { specialization: Specialization })
           <span className="font-mono text-mono-label text-mba-ink-faint uppercase tracking-widest block" style={{ margin: 0 }}>
             Today's Question
           </span>
-          <button
-            onClick={() => toggleFavorite(ledgerId, specialization, 'think')}
-            className="fav-toggle-btn"
-            aria-label={fav ? 'Remove from favorites' : 'Add to favorites'}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: fav ? 'var(--mba-accent)' : 'var(--mba-ink-faint)' }}
-          >
-            <Bookmark size={16} fill={fav ? 'var(--mba-accent)' : 'none'} />
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+            <button
+              onClick={() => toggleFavorite(ledgerId, specialization, 'think', 'heart')}
+              className="fav-toggle-btn"
+              aria-label={isHeart ? 'Remove from favorites' : 'Add to favorites'}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: isHeart ? 'var(--mba-accent)' : 'var(--mba-ink-faint)', display: 'flex', alignItems: 'center' }}
+            >
+              <Heart size={15} fill={isHeart ? 'var(--mba-accent)' : 'none'} />
+            </button>
+            <button
+              onClick={() => toggleFavorite(ledgerId, specialization, 'think', 'bookmark')}
+              className="fav-toggle-btn"
+              aria-label={isBookmark ? 'Remove from bookmarks' : 'Add to bookmarks'}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: isBookmark ? 'var(--mba-accent)' : 'var(--mba-ink-faint)', display: 'flex', alignItems: 'center' }}
+            >
+              <Bookmark size={15} fill={isBookmark ? 'var(--mba-accent)' : 'none'} />
+            </button>
+          </div>
         </div>
         <p className="think-question font-display">{t.question}</p>
       </section>
@@ -78,6 +98,13 @@ export function ThinkTab({ specialization }: { specialization: Specialization })
       )}
 
       {/* TODO: submission + AI feedback loop — Phase 5 */}
+
+      <NoteEditor
+        contentRef={ledgerId}
+        contentTitle={t.question}
+        contentType="think"
+        page={specialization}
+      />
 
       <style jsx>{`
         .think-question-section {

@@ -1,26 +1,38 @@
 import React from 'react'
 import type { Specialization } from '@/lib/content/types'
-import { marketingHotTopic } from '@/lib/content/marketing'
-import { financeHotTopic } from '@/lib/content/finance'
-import { consultingHotTopic } from '@/lib/content/consulting'
-import { operationsHotTopic } from '@/lib/content/operations'
-import { strategyHotTopic } from '@/lib/content/strategy'
-import { peopleHotTopic } from '@/lib/content/people'
 import { useMbaStore } from '@/lib/stores/mbaStore'
-import { getDynamicContentForDate } from '@/lib/content/getDynamicContent'
 import { StakeholderTable } from '@/components/StakeholderTable'
 import { ScenarioBlock } from '@/components/ScenarioBlock'
 import { Citation } from '@/components/Citation'
-import { Bookmark } from 'lucide-react'
+import { Bookmark, Heart } from 'lucide-react'
+import { NoteEditor } from '@/components/NoteEditor'
+import { useDailyContent } from '@/lib/hooks/useDailyContent'
 
 export function HotTopicTab({ specialization }: { specialization: Specialization }) {
   const { activeDate, toggleFavorite, isFavorite } = useMbaStore()
   const currentDate = activeDate ? new Date(activeDate) : new Date()
-  const h = getDynamicContentForDate('hot-topic', specialization, currentDate) as any
-  if (!h) return null
+  const dateStr = currentDate.toISOString().slice(0, 10)
+  const ledgerId = `${specialization}_hotTopic__${dateStr}`
+  
+  const { data: h, loading, error } = useDailyContent<any>(specialization, 'hotTopic', currentDate)
+  const isHeart = isFavorite(ledgerId, 'heart')
+  const isBookmark = isFavorite(ledgerId, 'bookmark')
 
-  const ledgerId = `${specialization}_hotTopic__${h.date}`
-  const fav = isFavorite(ledgerId)
+  if (loading) {
+    return (
+      <div className="font-body text-caption text-mba-ink-faint p-8 animate-pulse text-center">
+        Loading today's fresh briefing...
+      </div>
+    )
+  }
+
+  if (error || !h) {
+    return (
+      <div className="font-body text-caption text-mba-ink-faint p-8 text-center">
+        Failed to load content. Gracefully recovering...
+      </div>
+    )
+  }
 
   return (
     <article aria-label="Hot topic">
@@ -32,14 +44,24 @@ export function HotTopicTab({ specialization }: { specialization: Specialization
           {h.citations.map((c: any) => <Citation key={c.id} data={c} />)}
         </div>
 
-        <button
-          onClick={() => toggleFavorite(ledgerId, specialization, 'hotTopic')}
-          className="fav-toggle-btn"
-          aria-label={fav ? 'Remove from favorites' : 'Add to favorites'}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', color: fav ? 'var(--mba-accent)' : 'var(--mba-ink-faint)' }}
-        >
-          <Bookmark size={16} fill={fav ? 'var(--mba-accent)' : 'none'} />
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+          <button
+            onClick={() => toggleFavorite(ledgerId, specialization, 'hotTopic', 'heart')}
+            className="fav-toggle-btn"
+            aria-label={isHeart ? 'Remove from favorites' : 'Add to favorites'}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: isHeart ? 'var(--mba-accent)' : 'var(--mba-ink-faint)', display: 'flex', alignItems: 'center' }}
+          >
+            <Heart size={15} fill={isHeart ? 'var(--mba-accent)' : 'none'} />
+          </button>
+          <button
+            onClick={() => toggleFavorite(ledgerId, specialization, 'hotTopic', 'bookmark')}
+            className="fav-toggle-btn"
+            aria-label={isBookmark ? 'Remove from bookmarks' : 'Add to bookmarks'}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: isBookmark ? 'var(--mba-accent)' : 'var(--mba-ink-faint)', display: 'flex', alignItems: 'center' }}
+          >
+            <Bookmark size={15} fill={isBookmark ? 'var(--mba-accent)' : 'none'} />
+          </button>
+        </div>
       </div>
 
       <h2 className="font-display ht-headline">{h.headline}</h2>
@@ -63,6 +85,13 @@ export function HotTopicTab({ specialization }: { specialization: Specialization
       <HtSection label="Three Scenarios">
         <ScenarioBlock scenarios={h.scenarios} />
       </HtSection>
+
+      <NoteEditor
+        contentRef={ledgerId}
+        contentTitle={h.headline}
+        contentType="hotTopic"
+        page={specialization}
+      />
 
       <style jsx>{`
         .ht-eyebrow { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-3); }

@@ -6,7 +6,7 @@ import { Citation } from '@/components/Citation'
 import { useMbaStore } from '@/lib/stores/mbaStore'
 import { DateNav } from '@/components/DateNav'
 import { toISODate } from '@/lib/getDayIndex'
-import { Bookmark } from 'lucide-react'
+import { Bookmark, Heart } from 'lucide-react'
 
 export default function BitesPage() {
   const { activeDate, toggleFavorite, isFavorite } = useMbaStore()
@@ -23,7 +23,8 @@ export default function BitesPage() {
   }, [currentDate])
 
   const ledgerId = `bites_bite__${dateStr}`
-  const fav = isFavorite(ledgerId)
+  const isHeart = isFavorite(ledgerId, 'heart')
+  const isBookmark = isFavorite(ledgerId, 'bookmark')
 
   if (!mounted) {
     return (
@@ -52,14 +53,24 @@ export default function BitesPage() {
               {bite.type}
             </span>
 
-            <button
-              onClick={() => toggleFavorite(ledgerId, 'bites', 'bite')}
-              className="fav-toggle-btn"
-              aria-label={fav ? 'Remove from favorites' : 'Add to favorites'}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', color: fav ? 'var(--mba-accent)' : 'var(--mba-ink-faint)' }}
-            >
-              <Bookmark size={16} fill={fav ? 'var(--mba-accent)' : 'none'} />
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+              <button
+                onClick={() => toggleFavorite(ledgerId, 'bites', 'bite', 'heart')}
+                className="fav-toggle-btn"
+                aria-label={isHeart ? 'Remove from favorites' : 'Add to favorites'}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: isHeart ? 'var(--mba-accent)' : 'var(--mba-ink-faint)', display: 'flex', alignItems: 'center' }}
+              >
+                <Heart size={15} fill={isHeart ? 'var(--mba-accent)' : 'none'} />
+              </button>
+              <button
+                onClick={() => toggleFavorite(ledgerId, 'bites', 'bite', 'bookmark')}
+                className="fav-toggle-btn"
+                aria-label={isBookmark ? 'Remove from bookmarks' : 'Add to bookmarks'}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: isBookmark ? 'var(--mba-accent)' : 'var(--mba-ink-faint)', display: 'flex', alignItems: 'center' }}
+              >
+                <Bookmark size={15} fill={isBookmark ? 'var(--mba-accent)' : 'none'} />
+              </button>
+            </div>
           </div>
 
           <h2 className="font-display text-h2-fluid text-mba-ink mb-6" style={{ fontWeight: 600 }}>

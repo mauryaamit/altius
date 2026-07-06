@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { Cormorant_Garamond, DM_Sans, JetBrains_Mono } from 'next/font/google'
-import { AltiusShell } from '@/components/AltiusShell'
+import { AuthGuard } from '@/components/AuthGuard'
 import './globals.css'
 
 const cormorant = Cormorant_Garamond({
@@ -50,7 +50,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
       </head>
       <body>
-        <AltiusShell>{children}</AltiusShell>
+        <AuthGuard>{children}</AuthGuard>
       </body>
     </html>
   )

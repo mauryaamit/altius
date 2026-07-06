@@ -327,5 +327,26 @@ export interface FavoriteEntry {
   savedAt: number              // timestamp
   page: string                 // denormalized page
   contentType: string          // denormalized contentType
+  type: 'heart' | 'bookmark'
+  collections?: string[]
+}
+
+// ─── Notes & Journal ────────────────────────────────────────────────────────
+export interface NoteEntry {
+  id: string
+  contentRef: string           // references a ledgerId (e.g. "marketing_case__2026-07-06")
+  contentTitle: string
+  contentType: string
+  page: string
+  noteText: string
+  updatedAt: number
+}
+
+export interface JournalEntry {
+  date: string                 // YYYY-MM-DD
+  text: string
+  wordCount: number
+  promptUsed: string | null
+  updatedAt: number
 }
 

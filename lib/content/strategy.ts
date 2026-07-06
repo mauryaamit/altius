@@ -2,6 +2,86 @@ import type { ConceptEntry, CaseContent, HotTopicContent, ThinkContent, Opportun
 
 export const strategyConcepts: ConceptEntry[] = [
   {
+  "id": "strat-comp-decay",
+  "title": "Competitive Advantage Decay",
+  "category": "Advantage",
+  "altitude": {
+    "hook": "Competitive advantage decay is the inevitability of competitors copy-pasting your success.",
+    "plain": "Imagine inventing the first waterproof smartphone. You have a massive advantage for a year. However, competitors soon take your phone apart, reverse-engineer it, and launch their own waterproof phones. Your advantage decays as the feature becomes a standard expectation.",
+    "depth": "Coined by strategic management theorists, the decay cycle maps the transition from innovation to commodity. The speed of decay is dictated by copy-cat cost and patent protections. Resource-Based View (RBV) suggests that to resist decay, advantages must rely on resources that are VRIO: Valuable, Rare, Inimitable, and Organized. It fails when firms focus on protecting obsolete advantages rather than constantly innovating."
+  }
+},
+  {
+  "id": "strat-platform-ecosystem",
+  "title": "Platform & Ecosystem Strategy",
+  "category": "Strategy",
+  "altitude": {
+    "hook": "Platform strategy is building a garden where other businesses grow, paying you rent.",
+    "plain": "Apple doesn't just sell phones; they run the App Store. By allowing millions of developers to sell apps directly to iPhone users, Apple built an ecosystem. The apps make the iPhone more valuable, and the iPhone gives developers a market, with Apple taking a 30% cut of all transactions.",
+    "depth": "Platform strategy leverages multi-sided markets and network effects (where value increases with user scale). The critical strategic choice is the 'subsidy side' vs the 'money side' (e.g. Google subsidizes search for users, charges advertisers). Platforms build high entry barriers (switching costs). They fail due to disintermediation risk (users taking transactions offline to avoid fees) or regulatory antitrust enforcement."
+  }
+},
+  {
+  "id": "strat-corporate-vs-bu",
+  "title": "Corporate vs. Business Unit Strategy",
+  "category": "Strategy",
+  "altitude": {
+    "hook": "Corporate strategy is about portfolio design, while business unit strategy is about winning markets.",
+    "plain": "If a conglomerate owns a steel factory and a retail chain, Corporate Strategy decides whether to sell the steel factory to buy a fintech company (Portfolio allocation). Business Unit Strategy is what the retail chain's CEO does to beat local supermarkets (Competitive positioning).",
+    "depth": "Corporate strategy answers: 'Which businesses should we be in, and how do we add synergy?' It manages capital allocation, M&A, and shared services. Business Unit (BU) strategy answers: 'How do we compete in this specific market?' (Cost leadership vs Differentiation). Conglomerates fail when corporate headquarters adds overhead costs without delivering actual synergy advantages to the BUs."
+  }
+},
+  {
+  "id": "strat-merger-pmi",
+  "title": "Post-Merger Integration (PMI)",
+  "category": "M&A",
+  "altitude": {
+    "hook": "PMI is where the promise of a corporate merger is actually realized or destroyed.",
+    "plain": "Buying a competitor is like getting married. Signing the contract is the easy part. The hard part is moving into the same house, combining bank accounts, deciding who does the dishes, and adjusting to each other's habits. PMI is the operational blending of two companies post-merger.",
+    "depth": "Over 70% of mergers fail to deliver the synergies promised in the deal prospectus. This failure usually occurs during Post-Merger Integration (PMI). Integration types range from complete absorption to preserving autonomy. PMI bottlenecks include IT database reconciliations, cultural clashes, and sales territory overlaps. It fails when management ignores human cultural friction, leading to attrition of key talent."
+  }
+},
+  {
+  "id": "strat-scenario-planning",
+  "title": "Scenario Planning (Shell Method)",
+  "category": "Strategy",
+  "altitude": {
+    "hook": "Scenario planning prepares firms for multiple divergent futures instead of predicting one.",
+    "plain": "If you are planning an outdoor concert, you don't just check the weather report and hope. You prepare three plans: one for clear skies, one for light rain, and one for a thunderstorm. Scenario planning creates strategic playbooks for different economic and regulatory futures.",
+    "depth": "Developed by Royal Dutch Shell in the 1970s, this method rejects singular forecasts. Strategists identify key uncertainties (e.g. EV adoption speed vs. oil price) and build a 2x2 grid representing four distinct future worlds. The team tests if current strategy is resilient across all four scenarios. It fails when scenarios are treated as simple science fiction exercises without trigger points that activate specific strategic responses."
+  }
+},
+  {
+  "id": "strat-dynamic-capabilities",
+  "title": "Dynamic Capabilities Framework",
+  "category": "Strategy",
+  "altitude": {
+    "hook": "Dynamic capabilities are a firm's ability to constantly rewrite its own rules to adapt.",
+    "plain": "Imagine a manufacturing plant with state-of-the-art machines for printing newspapers. Those are static capabilities. If the market shifts to digital media, the firm's dynamic capabilities represent its ability to retrain staff, sell the printing presses, and build digital apps before going bankrupt.",
+    "depth": "Formulated by David Teece, the framework divides capabilities into Ordinary (doing things right) and Dynamic (doing the right things). Dynamic capabilities are categorized into: Sensing opportunities/threats, Seizing resources, and Transforming/reconfiguring assets. It explains how legacy giants (like Fujifilm) survived digital disruption while Kodak failed. It fails when treated as a vague academic buzzword without operational definitions."
+  }
+},
+  {
+  "id": "strat-first-mover",
+  "title": "First-Mover vs. Fast-Follower",
+  "category": "Advantage",
+  "altitude": {
+    "hook": "First-movers build market share, while fast-followers build optimized products.",
+    "plain": "The first brand to launch a product is like a scout entering a jungle; they get the best spots but face all the traps. A fast-follower is like a tracker who watches where the scout fell, avoids their mistakes, paths a safer route, and builds a better product at half the development cost.",
+    "depth": "First-mover advantages include brand recall, input lock-ins, and early experience curves. However, fast-followers benefit from 'Free-Rider Effects' (avoiding R&D mistakes) and resolved market uncertainty. For example, Apple watch was a fast-follower to Pebble. First-mover strategy fails when technology is changing rapidly, making the pioneer's early investments obsolete before they recover costs."
+  }
+},
+  {
+  "id": "strat-growth-profitability",
+  "title": "Growth vs. Profitability Tradeoff",
+  "category": "Advantage",
+  "altitude": {
+    "hook": "Growth vs. Profitability is the balance between capturing land vs. building fortresses.",
+    "plain": "If you spend all your money buying more land (Growth), you have a massive farm but no money left to build fences to protect it. If you spend all your money building a fence around a small plot (Profitability), your land is secure but you will never grow enough food to feed a town.",
+    "depth": "Firms balance market share expansion against margin optimization. Early-stage startups prioritize growth to lock in network effects, using Venture Capital to subsidize CAC. Mature firms must transition to profitability to satisfy capital markets. A classic failure is WeWork, which prioritized growth without viable unit economics. It fails when firms assume scale automatically yields profitability; if unit economics are negative, scale only accelerates losses."
+  }
+},
+  {
     id: 'strat-ansoff',
     title: 'Ansoff Matrix',
     category: 'Growth Strategy',

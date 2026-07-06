@@ -7,7 +7,7 @@ import { useMbaStore } from '@/lib/stores/mbaStore'
 import { DateNav } from '@/components/DateNav'
 import { toISODate } from '@/lib/getDayIndex'
 import { getPulseStoryForDate } from '@/lib/content/getDynamicContent'
-import { Bookmark } from 'lucide-react'
+import { Bookmark, Heart } from 'lucide-react'
 
 const FILTERS: PulseFilter[] = ['Markets', 'Policy', 'Corporate', 'Trade', 'Tech']
 
@@ -62,7 +62,8 @@ export default function PulsePage() {
       <div className="pulse-stories-list">
         {activeStories.map((story) => {
           const ledgerId = `pulse_pulseStory_${story.filter.toLowerCase()}_${dateStr}`
-          const fav = isFavorite(ledgerId)
+          const isHeart = isFavorite(ledgerId, 'heart')
+          const isBookmark = isFavorite(ledgerId, 'bookmark')
 
           return (
             <article key={story.id} className="pulse-story">
@@ -71,14 +72,24 @@ export default function PulsePage() {
                   {story.filter}
                 </span>
 
-                <button
-                  onClick={() => toggleFavorite(ledgerId, 'pulse', 'pulseStory')}
-                  className="fav-toggle-btn"
-                  aria-label={fav ? 'Remove from favorites' : 'Add to favorites'}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: fav ? 'var(--mba-accent)' : 'var(--mba-ink-faint)' }}
-                >
-                  <Bookmark size={16} fill={fav ? 'var(--mba-accent)' : 'none'} />
-                </button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+                  <button
+                    onClick={() => toggleFavorite(ledgerId, 'pulse', 'pulseStory', 'heart')}
+                    className="fav-toggle-btn"
+                    aria-label={isHeart ? 'Remove from favorites' : 'Add to favorites'}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: isHeart ? 'var(--mba-accent)' : 'var(--mba-ink-faint)', display: 'flex', alignItems: 'center' }}
+                  >
+                    <Heart size={15} fill={isHeart ? 'var(--mba-accent)' : 'none'} />
+                  </button>
+                  <button
+                    onClick={() => toggleFavorite(ledgerId, 'pulse', 'pulseStory', 'bookmark')}
+                    className="fav-toggle-btn"
+                    aria-label={isBookmark ? 'Remove from bookmarks' : 'Add to bookmarks'}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: isBookmark ? 'var(--mba-accent)' : 'var(--mba-ink-faint)', display: 'flex', alignItems: 'center' }}
+                  >
+                    <Bookmark size={15} fill={isBookmark ? 'var(--mba-accent)' : 'none'} />
+                  </button>
+                </div>
               </div>
 
               <div className="pulse-story-content">

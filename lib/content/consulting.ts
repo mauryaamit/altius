@@ -2,6 +2,96 @@ import type { ConceptEntry, CaseContent, HotTopicContent, ThinkContent, LibraryE
 
 export const consultingConcepts: ConceptEntry[] = [
   {
+  "id": "cons-pyramid-principle",
+  "title": "The Pyramid Principle (SCQA)",
+  "category": "Communication",
+  "altitude": {
+    "hook": "The Pyramid Principle is the rule of delivering the answer first, then supporting it.",
+    "plain": "Imagine telling your boss a story: 'The weather was bad, the car broke down, and we ran out of gas, so we missed the client meeting.' Under the Pyramid Principle, you say: 'We missed the client meeting. This happened due to bad weather, a car breakdown, and fuel shortage.' You state the conclusion first, then group the reasons.",
+    "depth": "Created by Barbara Minto at McKinsey, the framework structures arguments vertically and horizontally. At the apex is the recommendation. The horizontal layer must follow the MECE rule. SCQA (Situation, Complication, Question, Answer) is the narrative hook used to introduce the pyramid. For example: Situation (we are market leader), Complication (D2C competitor is cutting prices), Question (should we match?), Answer (we should launch a premium sub-brand). The framework fails when the audience requires a collaborative, exploratory discussion rather than a directive conclusion."
+  }
+},
+  {
+  "id": "cons-hypothesis-driven",
+  "title": "Hypothesis-Driven Problem Solving",
+  "category": "Problem Solving",
+  "altitude": {
+    "hook": "Hypothesis-driven solving is forming an educated guess upfront to guide your search.",
+    "plain": "If your house keys are missing, you don't search the entire city. You form a hypothesis: 'I probably left them in my coat pocket.' You test this specific guess first. Consultants use this method to immediately narrow down corporate audits instead of looking at raw data hoping for an answer.",
+    "depth": "A key consulting discipline. Instead of open-ended analysis, the consultant states a 'falsifiable hypothesis' based on initial data (e.g. 'Company X is unprofitable because pricing in Segment A is below marginal cost'). They then build an Issue Tree to test this hypothesis. This saves weeks of data-scraping. However, confirmation bias represents the biggest risk: the team may search only for data that proves their guess correct, ignoring contrarian evidence. It fails when the problem domain is highly volatile and complex, where initial hypotheses are obsolete before they are tested."
+  }
+},
+  {
+  "id": "cons-mece-drill",
+  "title": "The MECE Principle Drill",
+  "category": "Problem Solving",
+  "altitude": {
+    "hook": "MECE partitions any business problem into non-overlapping, complete buckets.",
+    "plain": "If you divide the world's population into 'people under 30' and 'people over 30,' you are MECE (Mutually Exclusive: no one is in both; Collectively Exhaustive: everyone is accounted for). If you divide them into 'athletes' and 'students,' you fail because some are both (overlapping) and some are neither (incomplete).",
+    "depth": "Mutually Exclusive, Collectively Exhaustive (MECE) is the foundation of McKinsey's problem-solving toolkit. It ensures issue trees cover all potential root causes without duplicate work. Common drills include grouping costs into Fixed vs. Variable, or customers into B2B vs. B2C. A MECE violation results in redundant analysis or missed blind spots. It fails when applied to highly integrated complex systems (e.g. digital ecosystems) where boundaries are fluid and variables interact dynamically, making isolation artificial."
+  }
+},
+  {
+  "id": "cons-market-sizing",
+  "title": "Market Sizing Master Template",
+  "category": "Problem Solving",
+  "altitude": {
+    "hook": "Market sizing is calculating the scale of an industry using logical proxy assumptions.",
+    "plain": "If you want to guess how many toothbrushes are sold in India daily, you start with the population (1.4 billion), split them by income/location (urban vs rural), estimate how often each group brushes (daily vs weekly), and how often they replace their brush (every 3 months). This turns a wild guess into structured math.",
+    "depth": "Market sizing estimates Total Addressable Market (TAM). The top-down approach starts with population demographics and filters down. The bottom-up approach starts with unit level transactions (e.g. average store sales) and scales up. Consultants cross-check both models. Key values to memorize: India population (1.4 billion), households (300 million), life expectancy (70 years). Sizing models fail when they use faulty proxy links (e.g. assuming smartphone ownership dictates shampoo consumption), or when they ignore geographic variations."
+  }
+},
+  {
+  "id": "cons-mckinsey-7s",
+  "title": "McKinsey 7S Framework",
+  "category": "Framework",
+  "altitude": {
+    "hook": "McKinsey 7S aligns hard elements and soft elements to execute strategic change.",
+    "plain": "If you buy a fast race car (Strategy & Structure) but don't have a skilled driver (Staff & Skills) or a matching fuel system (Systems), you won't win. The 7S framework maps seven corporate elements to ensure they all pull in the same direction during a business pivot.",
+    "depth": "Created in the 1980s by Tom Yates and Robert Waterman, the model splits elements into 'Hard' (Strategy, Structure, Systems) and 'Soft' (Shared Values, Style, Staff, Skills). Shared Values sit at the center. Change programs fail when leaders only change the hard elements (e.g. restructuring org charts) while ignoring the soft culture and skills required to operate the new design. The model fails when treated as a simple check-list rather than an interactive network analysis."
+  }
+},
+  {
+  "id": "cons-bain-nps",
+  "title": "Bain's Net Promoter System (NPS+)",
+  "category": "Framework",
+  "altitude": {
+    "hook": "NPS categorizes your customer base into promoters, passives, and detractors.",
+    "plain": "NPS asks one question: 'On a scale of 0-10, how likely are you to recommend us to a friend?' 9-10 are Promoters (loyal fans), 7-8 are Passives (could switch to competitors), and 0-6 are Detractors (unhappy buyers). Your score is the percentage of Promoters minus the percentage of Detractors.",
+    "depth": "Developed by Fred Reichheld of Bain & Company in 2003, NPS Net Promoter Score correlates with organic growth. The '+' in modern NPS includes qualitative feedback loops ('Why did you give this score?') and closed-loop routing (alerting store managers to contact detractors within 24 hours). NPS fails when corporate managers game the metric (e.g. begging customers for 10s), turning it into a vanity target (Goodhart's Law) that loses correlation with actual sales growth."
+  }
+},
+  {
+  "id": "cons-bcg-triangle",
+  "title": "BCG Time-Cost-Quality Triangle",
+  "category": "Framework",
+  "altitude": {
+    "hook": "The project triangle is the reality check that you cannot optimize all three parameters.",
+    "plain": "If you order furniture, you can get it cheap and fast, but it will be low quality. You can get it fast and high quality, but it will be expensive. You can get it cheap and high quality, but you will wait a long time. You can choose any two, but never all three.",
+    "depth": "The Time-Cost-Quality tradeoff (also known as the Project Management Triangle) represents constraint mapping. Strategy consulting emphasizes choosing which constraint to compromise based on customer segment expectations. For example, discount airlines trade time/convenience for low cost. The framework fails when process innovations (like digital automation) shift the frontier, allowing a competitor to temporarily deliver improvements across all three axes simultaneously."
+  }
+},
+  {
+  "id": "cons-case-comm",
+  "title": "Consulting Case Communication",
+  "category": "Communication",
+  "altitude": {
+    "hook": "Case communication is about showing your structural thinking, not just giving answers.",
+    "plain": "If an interviewer asks: 'How would you double this hospital's profit?', don't blurt out: 'Add more beds.' Instead, structure it: 'I will analyze this across Revenue (patient volume, average billing) and Costs (fixed facility costs, variable medical staff costs). Let's explore revenue first.' This walks the interviewer through your brain.",
+    "depth": "Case interviews test structured synthesis under stress. Communication rules: (1) Ask clarifying questions upfront to confirm objectives. (2) Take structured notes. (3) Signpost arguments ('First... Second... Third...'). (4) Present recommendations with a risk buffer. Case communication fails when candidates memorize pre-baked frameworks and force them onto unique case contexts, showing rigid thinking instead of interactive problem solving."
+  }
+},
+  {
+  "id": "cons-so-what",
+  "title": "The 'So What' Test",
+  "category": "Communication",
+  "altitude": {
+    "hook": "The 'So What' test forces recommendations to move from dry data to business actions.",
+    "plain": "If a consultant presents: 'Our study shows 60% of our app users are under 25,' the client asks: 'So what?' The consultant replies: 'So we should shift our ad budget to TikTok.' The client asks: 'So what?' The consultant: 'So we can lower acquisition cost by 20%.' Every finding must pass this test.",
+    "depth": "A core editing tool. Data is only useful if it drives decision logic. The test forces consultants to repeatedly ask 'So what?' until they reach a recommendation that directly impacts profitability or competitive moat. It prevents data dumping. For example, a chart showing regional sales drops must lead to a root-cause hypothesis, not just an observation. It fails when used to force complex, ambiguous systems into simplistic binary actions."
+  }
+},
+  {
     id: 'cons-mece',
     title: 'MECE Principle',
     category: 'Problem Structuring',

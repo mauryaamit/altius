@@ -3,7 +3,7 @@ import React, { useState, useMemo } from 'react'
 import { TabBar } from '@/components/TabBar'
 import { AltitudeBlock } from '@/components/AltitudeBlock'
 import { RecallCheck } from '@/components/RecallCheck'
-import { ChevronDown, ChevronUp, Bookmark } from 'lucide-react'
+import { ChevronDown, ChevronUp, Bookmark, Heart } from 'lucide-react'
 import { useMbaStore } from '@/lib/stores/mbaStore'
 import { DateNav } from '@/components/DateNav'
 import { toISODate } from '@/lib/getDayIndex'
@@ -75,7 +75,8 @@ export default function EnglishPage() {
 
             {content.vocabulary.map((vocab, vIdx) => {
               const ledgerId = `english_vocabularyWord_vocab-${vIdx}_${dateStr}`
-              const fav = isFavorite(ledgerId)
+              const isHeart = isFavorite(ledgerId, 'heart')
+              const isBookmark = isFavorite(ledgerId, 'bookmark')
 
               return (
                 <div key={vocab.word} className="vocab-card-wrapper mb-8">
@@ -85,14 +86,24 @@ export default function EnglishPage() {
                         Word {vIdx + 1} of 3
                       </span>
                       
-                      <button
-                        onClick={() => toggleFavorite(ledgerId, 'english', 'vocabularyWord')}
-                        className="fav-toggle-btn"
-                        aria-label={fav ? 'Remove from favorites' : 'Add to favorites'}
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: fav ? 'var(--mba-accent)' : 'var(--mba-ink-faint)' }}
-                      >
-                        <Bookmark size={16} fill={fav ? 'var(--mba-accent)' : 'none'} />
-                      </button>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+                        <button
+                          onClick={() => toggleFavorite(ledgerId, 'english', 'vocabularyWord', 'heart')}
+                          className="fav-toggle-btn"
+                          aria-label={isHeart ? 'Remove from favorites' : 'Add to favorites'}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: isHeart ? 'var(--mba-accent)' : 'var(--mba-ink-faint)', display: 'flex', alignItems: 'center' }}
+                        >
+                          <Heart size={15} fill={isHeart ? 'var(--mba-accent)' : 'none'} />
+                        </button>
+                        <button
+                          onClick={() => toggleFavorite(ledgerId, 'english', 'vocabularyWord', 'bookmark')}
+                          className="fav-toggle-btn"
+                          aria-label={isBookmark ? 'Remove from bookmarks' : 'Add to bookmarks'}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: isBookmark ? 'var(--mba-accent)' : 'var(--mba-ink-faint)', display: 'flex', alignItems: 'center' }}
+                        >
+                          <Bookmark size={15} fill={isBookmark ? 'var(--mba-accent)' : 'none'} />
+                        </button>
+                      </div>
                     </div>
 
                     <h2 className="font-display vocab-word">{vocab.word}</h2>
@@ -145,7 +156,8 @@ export default function EnglishPage() {
 
             {content.grammar.map((grammar, gIdx) => {
               const ledgerId = `english_grammarRule_grammar-${gIdx}_${dateStr}`
-              const fav = isFavorite(ledgerId)
+              const isHeart = isFavorite(ledgerId, 'heart')
+              const isBookmark = isFavorite(ledgerId, 'bookmark')
 
               return (
                 <div key={grammar.rule} className="grammar-card-wrapper mb-8">
@@ -155,14 +167,24 @@ export default function EnglishPage() {
                         Rule {gIdx + 1} of 2
                       </span>
 
-                      <button
-                        onClick={() => toggleFavorite(ledgerId, 'english', 'grammarRule')}
-                        className="fav-toggle-btn"
-                        aria-label={fav ? 'Remove from favorites' : 'Add to favorites'}
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: fav ? 'var(--mba-accent)' : 'var(--mba-ink-faint)' }}
-                      >
-                        <Bookmark size={16} fill={fav ? 'var(--mba-accent)' : 'none'} />
-                      </button>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+                        <button
+                          onClick={() => toggleFavorite(ledgerId, 'english', 'grammarRule', 'heart')}
+                          className="fav-toggle-btn"
+                          aria-label={isHeart ? 'Remove from favorites' : 'Add to favorites'}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: isHeart ? 'var(--mba-accent)' : 'var(--mba-ink-faint)', display: 'flex', alignItems: 'center' }}
+                        >
+                          <Heart size={15} fill={isHeart ? 'var(--mba-accent)' : 'none'} />
+                        </button>
+                        <button
+                          onClick={() => toggleFavorite(ledgerId, 'english', 'grammarRule', 'bookmark')}
+                          className="fav-toggle-btn"
+                          aria-label={isBookmark ? 'Remove from bookmarks' : 'Add to bookmarks'}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: isBookmark ? 'var(--mba-accent)' : 'var(--mba-ink-faint)', display: 'flex', alignItems: 'center' }}
+                        >
+                          <Bookmark size={15} fill={isBookmark ? 'var(--mba-accent)' : 'none'} />
+                        </button>
+                      </div>
                     </div>
 
                     <h2 className="font-display grammar-rule">{grammar.rule}</h2>
@@ -221,14 +243,24 @@ export default function EnglishPage() {
                 Reading Passage
               </span>
 
-              <button
-                onClick={() => toggleFavorite(`english_readingPassage__${dateStr}`, 'english', 'readingPassage')}
-                className="fav-toggle-btn"
-                aria-label={isFavorite(`english_readingPassage__${dateStr}`) ? 'Remove from favorites' : 'Add to favorites'}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: isFavorite(`english_readingPassage__${dateStr}`) ? 'var(--mba-accent)' : 'var(--mba-ink-faint)' }}
-              >
-                <Bookmark size={18} fill={isFavorite(`english_readingPassage__${dateStr}`) ? 'var(--mba-accent)' : 'none'} />
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+                <button
+                  onClick={() => toggleFavorite(`english_readingPassage__${dateStr}`, 'english', 'readingPassage', 'heart')}
+                  className="fav-toggle-btn"
+                  aria-label={isFavorite(`english_readingPassage__${dateStr}`, 'heart') ? 'Remove from favorites' : 'Add to favorites'}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: isFavorite(`english_readingPassage__${dateStr}`, 'heart') ? 'var(--mba-accent)' : 'var(--mba-ink-faint)', display: 'flex', alignItems: 'center' }}
+                >
+                  <Heart size={15} fill={isFavorite(`english_readingPassage__${dateStr}`, 'heart') ? 'var(--mba-accent)' : 'none'} />
+                </button>
+                <button
+                  onClick={() => toggleFavorite(`english_readingPassage__${dateStr}`, 'english', 'readingPassage', 'bookmark')}
+                  className="fav-toggle-btn"
+                  aria-label={isFavorite(`english_readingPassage__${dateStr}`, 'bookmark') ? 'Remove from bookmarks' : 'Add to bookmarks'}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: isFavorite(`english_readingPassage__${dateStr}`, 'bookmark') ? 'var(--mba-accent)' : 'var(--mba-ink-faint)', display: 'flex', alignItems: 'center' }}
+                >
+                  <Bookmark size={15} fill={isFavorite(`english_readingPassage__${dateStr}`, 'bookmark') ? 'var(--mba-accent)' : 'none'} />
+                </button>
+              </div>
             </div>
 
             <h2 className="font-display text-h2-fluid text-mba-ink mb-5" style={{ fontWeight: 600 }}>
@@ -269,14 +301,24 @@ export default function EnglishPage() {
                 WAT Prompt
               </span>
 
-              <button
-                onClick={() => toggleFavorite(`english_watPrompt__${dateStr}`, 'english', 'watPrompt')}
-                className="fav-toggle-btn"
-                aria-label={isFavorite(`english_watPrompt__${dateStr}`) ? 'Remove from favorites' : 'Add to favorites'}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: isFavorite(`english_watPrompt__${dateStr}`) ? 'var(--mba-accent)' : 'var(--mba-ink-faint)' }}
-              >
-                <Bookmark size={18} fill={isFavorite(`english_watPrompt__${dateStr}`) ? 'var(--mba-accent)' : 'none'} />
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+                <button
+                  onClick={() => toggleFavorite(`english_watPrompt__${dateStr}`, 'english', 'watPrompt', 'heart')}
+                  className="fav-toggle-btn"
+                  aria-label={isFavorite(`english_watPrompt__${dateStr}`, 'heart') ? 'Remove from favorites' : 'Add to favorites'}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: isFavorite(`english_watPrompt__${dateStr}`, 'heart') ? 'var(--mba-accent)' : 'var(--mba-ink-faint)', display: 'flex', alignItems: 'center' }}
+                >
+                  <Heart size={15} fill={isFavorite(`english_watPrompt__${dateStr}`, 'heart') ? 'var(--mba-accent)' : 'none'} />
+                </button>
+                <button
+                  onClick={() => toggleFavorite(`english_watPrompt__${dateStr}`, 'english', 'watPrompt', 'bookmark')}
+                  className="fav-toggle-btn"
+                  aria-label={isFavorite(`english_watPrompt__${dateStr}`, 'bookmark') ? 'Remove from bookmarks' : 'Add to bookmarks'}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: isFavorite(`english_watPrompt__${dateStr}`, 'bookmark') ? 'var(--mba-accent)' : 'var(--mba-ink-faint)', display: 'flex', alignItems: 'center' }}
+                >
+                  <Bookmark size={15} fill={isFavorite(`english_watPrompt__${dateStr}`, 'bookmark') ? 'var(--mba-accent)' : 'none'} />
+                </button>
+              </div>
             </div>
 
             <h2 className="font-display text-h2-fluid text-mba-ink mb-5" style={{ fontWeight: 600 }}>

@@ -1,25 +1,37 @@
 import React from 'react'
 import type { Specialization } from '@/lib/content/types'
-import { marketingCase } from '@/lib/content/marketing'
-import { financeCase } from '@/lib/content/finance'
-import { consultingCase } from '@/lib/content/consulting'
-import { operationsCase } from '@/lib/content/operations'
-import { strategyCase } from '@/lib/content/strategy'
-import { peopleCase } from '@/lib/content/people'
 import { useMbaStore } from '@/lib/stores/mbaStore'
-import { getDynamicContentForDate } from '@/lib/content/getDynamicContent'
 import { AssumptionTable } from '@/components/AssumptionTable'
 import { Citation } from '@/components/Citation'
-import { AlertTriangle, Bookmark } from 'lucide-react'
+import { AlertTriangle, Bookmark, Heart } from 'lucide-react'
+import { NoteEditor } from '@/components/NoteEditor'
+import { useDailyContent } from '@/lib/hooks/useDailyContent'
 
 export function CaseTab({ specialization }: { specialization: Specialization }) {
   const { activeDate, toggleFavorite, isFavorite } = useMbaStore()
   const currentDate = activeDate ? new Date(activeDate) : new Date()
-  const c = getDynamicContentForDate('case', specialization, currentDate) as any
-  if (!c) return null
+  const dateStr = currentDate.toISOString().slice(0, 10)
+  const ledgerId = `${specialization}_case__${dateStr}`
+  
+  const { data: c, loading, error } = useDailyContent<any>(specialization, 'case', currentDate)
+  const isHeart = isFavorite(ledgerId, 'heart')
+  const isBookmark = isFavorite(ledgerId, 'bookmark')
 
-  const ledgerId = `${specialization}_case__${c.date}`
-  const fav = isFavorite(ledgerId)
+  if (loading) {
+    return (
+      <div className="font-body text-caption text-mba-ink-faint p-8 animate-pulse text-center">
+        Loading today's fresh briefing...
+      </div>
+    )
+  }
+
+  if (error || !c) {
+    return (
+      <div className="font-body text-caption text-mba-ink-faint p-8 text-center">
+        Failed to load content. Gracefully recovering...
+      </div>
+    )
+  }
 
   return (
     <article aria-label={`Case study: ${c.company}`}>
@@ -32,14 +44,24 @@ export function CaseTab({ specialization }: { specialization: Specialization }) 
           {c.citations.map((cit: any) => <Citation key={cit.id} data={cit} />)}
         </div>
 
-        <button
-          onClick={() => toggleFavorite(ledgerId, specialization, 'case')}
-          className="fav-toggle-btn"
-          aria-label={fav ? 'Remove from favorites' : 'Add to favorites'}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', color: fav ? 'var(--mba-accent)' : 'var(--mba-ink-faint)' }}
-        >
-          <Bookmark size={16} fill={fav ? 'var(--mba-accent)' : 'none'} />
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+          <button
+            onClick={() => toggleFavorite(ledgerId, specialization, 'case', 'heart')}
+            className="fav-toggle-btn"
+            aria-label={isHeart ? 'Remove from favorites' : 'Add to favorites'}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: isHeart ? 'var(--mba-accent)' : 'var(--mba-ink-faint)', display: 'flex', alignItems: 'center' }}
+          >
+            <Heart size={15} fill={isHeart ? 'var(--mba-accent)' : 'none'} />
+          </button>
+          <button
+            onClick={() => toggleFavorite(ledgerId, specialization, 'case', 'bookmark')}
+            className="fav-toggle-btn"
+            aria-label={isBookmark ? 'Remove from bookmarks' : 'Add to bookmarks'}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: isBookmark ? 'var(--mba-accent)' : 'var(--mba-ink-faint)', display: 'flex', alignItems: 'center' }}
+          >
+            <Bookmark size={15} fill={isBookmark ? 'var(--mba-accent)' : 'none'} />
+          </button>
+        </div>
       </div>
 
       <h2 className="font-display case-title">{c.company}</h2>
@@ -108,6 +130,13 @@ export function CaseTab({ specialization }: { specialization: Specialization }) 
           </ul>
         </div>
       </Section>
+
+      <NoteEditor
+        contentRef={ledgerId}
+        contentTitle={c.company}
+        contentType="case"
+        page={specialization}
+      />
 
       <style jsx>{`
         .case-eyebrow { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-3); }
