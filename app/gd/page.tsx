@@ -9,7 +9,7 @@ import { toISODate } from '@/lib/getDayIndex'
 import { getGDTopicForDate } from '@/lib/content/getDynamicContent'
 import { Bookmark, Heart } from 'lucide-react'
 
-const GD_FILTERS: GDTag[] = ['Current', 'Business', 'Abstract', 'Tech', 'Ethics']
+const GD_FILTERS: GDTag[] = ['Current', 'Business', 'Abstract', 'Tech', 'Ethics', 'Industry', 'Ethical Dilemma']
 
 export default function GDPage() {
   const { activeDate, toggleFavorite, isFavorite } = useMbaStore()

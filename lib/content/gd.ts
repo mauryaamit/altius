@@ -1020,5 +1020,73 @@ export const gdTopicPool: GDTopic[] = [
         "date": "2026-06-15"
       }
     ]
+  },
+  {
+    "topic": "Is the rapid expansion of quick-commerce hurting general trade and kirana stores in India?",
+    "tag": "Industry",
+    "framing": "Disruption of local neighborhood mom-and-pop stores vs rising urban consumer demand for 10-minute delivery convenience.",
+    "forPoints": [
+      {
+        "point": "Quick commerce aggregates wholesale demand, compressing supply chain wastage and optimizing distribution.",
+        "citations": []
+      },
+      {
+        "point": "It drives job creation in delivery logistics and warehouse operations in urban areas.",
+        "citations": []
+      }
+    ],
+    "againstPoints": [
+      {
+        "point": "Local retail employs over 40 million people; quick-commerce dark stores risk displacing neighborhood merchant livelihoods.",
+        "citations": []
+      },
+      {
+        "point": "Dark store operations concentrate market power, pricing controls, and customer data among a few platforms.",
+        "citations": []
+      }
+    ],
+    "closingStructure": "Synthesize the debate by analyzing channel integration and omnichannel regulatory models.",
+    "wayForward": "Foster a hybrid co-existence model where kiranas are integrated as dark store partners, utilizing local supply nodes.",
+    "citations": [
+      {
+        "id": 1,
+        "source": "FMCG Distributor League",
+        "date": "2026-05"
+      }
+    ]
+  },
+  {
+    "topic": "Should automated driving systems prioritize passenger safety over pedestrian life in unavoidable collisions?",
+    "tag": "Ethical Dilemma",
+    "framing": "The classic trolley problem applied to autonomous vehicle software design and legal liability frameworks.",
+    "forPoints": [
+      {
+        "point": "Prioritizing passenger safety is necessary to incentivize vehicle adoption; consumers will not purchase vehicles programmed to sacrifice them.",
+        "citations": []
+      },
+      {
+        "point": "Clear rule-based algorithms avoid unpredictable vehicle behaviors during critical split-second evasions.",
+        "citations": []
+      }
+    ],
+    "againstPoints": [
+      {
+        "point": "Sacrificing pedestrians violates basic kantian ethics of protecting the most vulnerable road users who did not opt into the vehicle risk.",
+        "citations": []
+      },
+      {
+        "point": "Software should minimize total harm, not default to protecting paying customers over bystanders.",
+        "citations": []
+      }
+    ],
+    "closingStructure": "Synthesize risk sharing frameworks and automated limits.",
+    "wayForward": "Develop public-consensus liability frameworks that share risk and mandate automated braking limits rather than active choosing algorithms.",
+    "citations": [
+      {
+        "id": 1,
+        "source": "AI Ethics Board",
+        "date": "2026-04"
+      }
+    ]
   }
 ];

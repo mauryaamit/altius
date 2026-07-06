@@ -24,6 +24,8 @@ const dailyItems: NavItem[] = [
   { label: 'Operations',  href: '/operations' },
   { label: 'Strategy',    href: '/strategy' },
   { label: 'People',      href: '/people' },
+  { label: 'Companies',   href: '/companies' },
+  { label: 'Roles',       href: '/roles' },
   { label: 'Guesstimate', href: '/guesstimate' },
   { label: 'GD Arena',    href: '/gd' },
   { label: 'Pulse',       href: '/pulse' },

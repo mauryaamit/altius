@@ -35,7 +35,20 @@ export function AuthGuard({ children }: AuthGuardProps) {
       }
     })
 
-    return () => unsubscribe()
+    // Retry Firestore sync when the browser comes back online
+    const handleOnline = () => {
+      const currentUser = auth.currentUser
+      if (currentUser) {
+        console.log('[Network] Back online — retrying Firestore sync.')
+        useMbaStore.getState().syncFromFirestore(currentUser.uid)
+      }
+    }
+    window.addEventListener('online', handleOnline)
+
+    return () => {
+      unsubscribe()
+      window.removeEventListener('online', handleOnline)
+    }
   }, [pathname, router])
 
   // Simple loading skeleton while auth initializes (aims for <500ms)

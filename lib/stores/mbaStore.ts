@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { doc, setDoc, getDoc, collection, getDocs, deleteDoc, writeBatch } from 'firebase/firestore'
 import { db, auth } from '@/lib/firebase'
-import type { RecallResult, RecallRecord, ContentLedgerEntry, FavoriteEntry, NoteEntry, JournalEntry } from '@/lib/content/types'
+import type { RecallResult, RecallRecord, ContentLedgerEntry, FavoriteEntry, NoteEntry, JournalEntry, UserPrefs } from '@/lib/content/types'
 
 // ─── Spaced-repetition interval schedule (days) ───────────────────────────────
 const INTERVALS = [1, 3, 7, 14, 30]
@@ -43,6 +43,7 @@ interface MbaState {
   // Notes & Journal
   notes: Record<string, NoteEntry>
   journal: Record<string, JournalEntry>
+  userPrefs: UserPrefs | null
 
   // Actions
   addRecall: (conceptId: string, result: RecallResult) => void
@@ -51,11 +52,13 @@ interface MbaState {
   setActiveDate: (date: Date | null) => void
   bumpStreak: () => void
   setTextSize: (size: 'compact' | 'default' | 'large') => void
+  saveUserPrefs: (prefs: UserPrefs) => Promise<void>
   
   // Notes & Journal Actions
   saveNote: (contentRef: string, contentTitle: string, contentType: string, page: string, noteText: string) => Promise<void>
   deleteNote: (contentRef: string) => Promise<void>
   saveJournal: (date: string, text: string, promptUsed: string | null) => Promise<void>
+  saveJournalEntry: (date: string, type: 'journal' | 'diary', text: string, promptUsed?: string | null) => Promise<void>
   clearNotes: () => Promise<void>
   clearJournal: () => Promise<void>
   syncFromFirestore: (uid: string) => Promise<void>
@@ -86,6 +89,7 @@ export const useMbaStore = create<MbaState>()(
       libraryDocuments: [],
       notes: {},
       journal: {},
+      userPrefs: null,
 
       addRecall: (conceptId, result) => {
         const today = new Date().toISOString().slice(0, 10)
@@ -206,23 +210,58 @@ export const useMbaStore = create<MbaState>()(
       },
 
       saveJournal: async (date, text, promptUsed) => {
-        const entry: JournalEntry = {
+        await get().saveJournalEntry(date, 'journal', text, promptUsed)
+      },
+
+      saveJournalEntry: async (date, type, text, promptUsed) => {
+        const currentEntry = get().journal[date] || {
           date,
-          text,
-          wordCount: text.trim() ? text.trim().split(/\s+/).length : 0,
-          promptUsed,
-          updatedAt: Date.now(),
+          text: '',
+          wordCount: 0,
+          promptUsed: null,
+          updatedAt: Date.now()
         }
+
+        const words = text.trim() ? text.trim().split(/\s+/).length : 0
+        const updatedEntry: JournalEntry = {
+          ...currentEntry,
+          updatedAt: Date.now()
+        }
+
+        if (type === 'journal') {
+          updatedEntry.journalText = text
+          updatedEntry.journalWordCount = words
+          updatedEntry.promptUsed = promptUsed !== undefined ? promptUsed : (currentEntry.promptUsed || null)
+          // Sync legacy fields
+          updatedEntry.text = text
+          updatedEntry.wordCount = words
+        } else {
+          updatedEntry.diaryText = text
+          updatedEntry.diaryWordCount = words
+        }
+
         set((state) => ({
           journal: {
             ...state.journal,
-            [date]: entry,
+            [date]: updatedEntry,
           },
         }))
+
         const currentUser = auth.currentUser
         if (currentUser) {
           const docRef = doc(db, 'users', currentUser.uid, 'journal', date)
-          await setDoc(docRef, entry)
+          await setDoc(docRef, updatedEntry)
+        }
+      },
+
+      saveUserPrefs: async (prefs) => {
+        set({ userPrefs: prefs })
+        const currentUser = auth.currentUser
+        if (currentUser) {
+          const docRef = doc(db, 'users', currentUser.uid, 'settings', 'global')
+          await setDoc(docRef, { 
+            userPrefs: prefs
+          }, { merge: true })
         }
       },
 
@@ -251,6 +290,11 @@ export const useMbaStore = create<MbaState>()(
       },
 
       syncFromFirestore: async (uid) => {
+        // Skip sync if browser reports it is offline — data will be restored from persisted cache
+        if (typeof navigator !== 'undefined' && !navigator.onLine) {
+          console.warn('[Firestore] Skipping sync: browser is offline. Persisted cache will be used.')
+          return
+        }
         try {
           // 1. Settings
           const settingsRef = doc(db, 'users', uid, 'settings', 'global')
@@ -261,6 +305,7 @@ export const useMbaStore = create<MbaState>()(
               textSize: data.textSize || 'default',
               streak: data.streak || 0,
               lastActiveDate: data.lastActiveDate || '',
+              userPrefs: data.userPrefs || null,
             })
             const scaleMap = { compact: '0.9', default: '1.0', large: '1.15' }
             const scaleVal = scaleMap[data.textSize as 'compact' | 'default' | 'large'] || '1.0'
@@ -320,8 +365,14 @@ export const useMbaStore = create<MbaState>()(
           }
           set({ journal })
 
-        } catch (error) {
-          console.error('Error syncing from Firestore:', error)
+        } catch (error: any) {
+          // Downgraded to warn so the Next.js dev overlay is not triggered on
+          // expected offline/network errors (e.g. failed-precondition, unavailable)
+          if (error?.code === 'unavailable' || error?.message?.includes('client is offline')) {
+            console.warn('[Firestore] Sync skipped: client is offline. Cached data in use.')
+          } else {
+            console.warn('Error syncing from Firestore:', error)
+          }
         }
       },
 

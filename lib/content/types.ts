@@ -183,7 +183,7 @@ export interface InterpretEntry {
 }
 
 // ─── GD Arena ───────────────────────────────────────────────────────────────
-export type GDTag = 'Current' | 'Business' | 'Abstract' | 'Tech' | 'Ethics'
+export type GDTag = 'Current' | 'Business' | 'Abstract' | 'Tech' | 'Ethics' | 'Industry' | 'Ethical Dilemma'
 
 export interface GDTopic {
   topic: string
@@ -331,6 +331,12 @@ export interface FavoriteEntry {
   collections?: string[]
 }
 
+export interface UserPrefs {
+  mbaYear?: 'year-1' | 'year-2' | 'other'
+  targetSectors?: string[]
+  background?: string
+}
+
 // ─── Notes & Journal ────────────────────────────────────────────────────────
 export interface NoteEntry {
   id: string
@@ -344,9 +350,15 @@ export interface NoteEntry {
 
 export interface JournalEntry {
   date: string                 // YYYY-MM-DD
-  text: string
-  wordCount: number
+  text: string                 // legacy/fallback
+  wordCount: number            // legacy/fallback
   promptUsed: string | null
+  
+  journalText?: string
+  journalWordCount?: number
+  diaryText?: string
+  diaryWordCount?: number
+  
   updatedAt: number
 }
 
