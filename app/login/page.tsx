@@ -85,6 +85,9 @@ export default function LoginPage() {
       let userFriendlyMessage = err.message || 'Failed to send magic link. Please check your email address.'
       if (err.code === 'auth/operation-not-allowed' || (err.message && err.message.includes('operation-not-allowed'))) {
         userFriendlyMessage = 'Passwordless Email Link sign-in is not enabled in your Firebase console. Please go to Firebase Console > Authentication > Sign-in method, click "Email/Password" (under Sign-in providers), turn on the "Email link (passwordless sign-in)" switch, and click Save.'
+      } else if (err.code === 'auth/unauthorized-continue-uri' || (err.message && err.message.includes('unauthorized-continue-uri'))) {
+        const domain = typeof window !== 'undefined' ? window.location.hostname : 'localhost'
+        userFriendlyMessage = `The domain "${domain}" is not authorized for redirects in your Firebase console. Please go to Firebase Console > Authentication > Settings (tab) > Authorized domains, click "Add domain", enter "${domain}", and click Save.`
       }
       setError(userFriendlyMessage)
       setLoading(false)
