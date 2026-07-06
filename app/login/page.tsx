@@ -24,7 +24,6 @@ export default function LoginPage() {
   const [otp, setOtp] = useState('')
   
   const [otpToken, setOtpToken] = useState('')
-  const [devOtp, setDevOtp] = useState('')
   
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -92,11 +91,6 @@ export default function LoginPage() {
         throw new Error(data.error || 'Failed to send verification code.')
       }
       setOtpToken(data.token)
-      if (data.otp) {
-        setDevOtp(data.otp) // Cache generated OTP for developer convenience
-      } else {
-        setDevOtp('')
-      }
       setStep('verify-otp')
       setLoading(false)
     } catch (err: any) {
@@ -317,14 +311,6 @@ export default function LoginPage() {
                 </p>
               </div>
 
-              {devOtp && (
-                <div className="dev-otp-banner mb-5">
-                  <span className="font-mono text-[10px] text-mba-accent uppercase tracking-wider block mb-1">Developer OTP (Auto-reveal)</span>
-                  <span className="font-mono text-h3 text-mba-accent font-bold tracking-widest">{devOtp}</span>
-                  <p className="text-[10px] text-mba-ink-soft mt-1">Copy and enter this code to verify locally.</p>
-                </div>
-              )}
-
               <div className="form-group">
                 <label htmlFor="otp" className="font-mono text-mono-label text-mba-ink-soft block mb-2">
                   6-Digit OTP
@@ -518,13 +504,7 @@ export default function LoginPage() {
           background: var(--mba-ink-faint);
           cursor: not-allowed;
         }
-        .dev-otp-banner {
-          background: var(--mba-accent-soft);
-          border: 1px solid var(--mba-rule);
-          border-radius: var(--radius-sm);
-          padding: var(--space-3);
-          text-align: center;
-        }
+
         .error-banner {
           display: flex;
           align-items: flex-start;

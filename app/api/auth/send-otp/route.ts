@@ -66,16 +66,10 @@ export async function POST(request: Request) {
     // Always log to terminal for developer tracking
     console.log(`[AUTH OTP] Email: ${email} | OTP: ${otp} | Sent via SMTP: ${emailSent ? 'Yes' : 'No'}`)
 
-    // In development mode (or if SMTP failed/not set), we return the OTP to allow seamless local verification
-    const isDev = process.env.NODE_ENV === 'development' || !emailSent
-
     return NextResponse.json({
       success: true,
       token,
       emailSent,
-      // Only reveal OTP if running locally or if SMTP isn't configured so developers can test out of the box
-      otp: isDev ? otp : undefined,
-      note: !emailSent ? 'SMTP not configured or failed. Returning OTP in response for development testing.' : undefined,
       error: smtpError || undefined
     })
   } catch (err: any) {
