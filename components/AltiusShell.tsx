@@ -393,21 +393,26 @@ export function AltiusShell({ children }: AltiusShellProps) {
           border-radius: var(--radius-sm);
           text-decoration: none;
           color: var(--mba-ink-soft);
-          transition: background 150ms ease, color 150ms ease;
+          transition: background-color 150ms ease, color 150ms ease;
           display: block;
         }
 
         :global(.altius-nav-link:hover) {
-          background: var(--mba-accent-soft);
+          background-color: rgba(30, 58, 95, 0.04);
           color: var(--mba-ink);
         }
 
         :global(.altius-nav-link.active) {
-          background: var(--mba-accent-soft);
-          color: var(--mba-ink);
-          font-weight: 500;
+          background-color: rgba(30, 58, 95, 0.08);
+          color: var(--mba-accent) !important;
+          font-weight: 600;
           border-left: 3px solid var(--mba-accent);
           border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+        }
+
+        :global(.altius-nav-link.active:hover) {
+          background-color: rgba(30, 58, 95, 0.12);
+          color: var(--mba-accent) !important;
         }
 
         .profile-footer-wrapper {

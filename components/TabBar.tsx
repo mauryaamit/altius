@@ -54,7 +54,7 @@ export function TabBar({ tabs, activeTab, onTabChange, queryParam = 'tab' }: Tab
       })}
 
       <style jsx>{`
-        .tab-bar {
+        :global(.tab-bar) {
           display: flex;
           gap: 0;
           border-bottom: 1px solid var(--mba-rule);
@@ -68,21 +68,21 @@ export function TabBar({ tabs, activeTab, onTabChange, queryParam = 'tab' }: Tab
           background: var(--mba-bg);
           padding: 0 var(--space-1);
         }
-        .tab-bar::-webkit-scrollbar { display: none; }
+        :global(.tab-bar::-webkit-scrollbar) { display: none; }
 
         @media (max-width: 767px) {
-          .tab-bar {
+          :global(.tab-bar) {
             top: 56px;
           }
         }
 
-        .tab-item {
+        :global(.tab-item) {
           display: inline-flex;
           align-items: center;
           gap: var(--space-2);
           padding: 10px 16px;
           text-decoration: none;
-          color: var(--mba-ink-faint);
+          color: var(--mba-ink-faint) !important;
           margin-bottom: -1px;
           white-space: nowrap;
           flex-shrink: 0;
@@ -93,23 +93,28 @@ export function TabBar({ tabs, activeTab, onTabChange, queryParam = 'tab' }: Tab
         }
 
         /* Hover — visible tint */
-        .tab-item:hover {
-          color: var(--mba-ink);
-          background-color: rgba(30, 58, 95, 0.08);
+        :global(.tab-item:hover) {
+          color: var(--mba-ink) !important;
+          background-color: rgba(30, 58, 95, 0.08) !important;
         }
 
         /* Active — strong accent */
-        .tab-item--active {
+        :global(.tab-item--active) {
           color: #1E3A5F !important;
-          background-color: rgba(30, 58, 95, 0.10);
-          font-weight: 700;
+          background-color: rgba(30, 58, 95, 0.10) !important;
+          font-weight: 700 !important;
         }
 
-        .tab-item--active .tab-label {
-          color: #1E3A5F;
+        :global(.tab-item--active .tab-label) {
+          color: #1E3A5F !important;
         }
 
-        .active-underline {
+        /* Active Hover */
+        :global(.tab-item--active:hover) {
+          background-color: rgba(30, 58, 95, 0.14) !important;
+        }
+
+        :global(.active-underline) {
           position: absolute;
           bottom: -1px;
           left: 0;
@@ -119,13 +124,13 @@ export function TabBar({ tabs, activeTab, onTabChange, queryParam = 'tab' }: Tab
           border-radius: 2px 2px 0 0;
         }
 
-        .tab-icon {
+        :global(.tab-icon) {
           display: flex;
           align-items: center;
         }
 
         @media (prefers-reduced-motion: reduce) {
-          .tab-item { transition: none; }
+          :global(.tab-item) { transition: none; }
         }
       `}</style>
     </nav>
