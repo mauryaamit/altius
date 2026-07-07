@@ -56,7 +56,7 @@ export function TabBar({ tabs, activeTab, onTabChange, queryParam = 'tab' }: Tab
       <style jsx>{`
         .tab-bar {
           display: flex;
-          gap: var(--space-6);
+          gap: 0;
           border-bottom: 1px solid var(--mba-rule);
           overflow-x: auto;
           -webkit-overflow-scrolling: touch;
@@ -66,13 +66,13 @@ export function TabBar({ tabs, activeTab, onTabChange, queryParam = 'tab' }: Tab
           top: 0;
           z-index: 30;
           background: var(--mba-bg);
+          padding: 0 var(--space-1);
         }
         .tab-bar::-webkit-scrollbar { display: none; }
 
         @media (max-width: 767px) {
           .tab-bar {
             top: 56px;
-            gap: var(--space-5);
           }
         }
 
@@ -80,22 +80,28 @@ export function TabBar({ tabs, activeTab, onTabChange, queryParam = 'tab' }: Tab
           display: flex;
           align-items: center;
           gap: var(--space-2);
-          padding: var(--space-3) var(--space-2);
+          padding: var(--space-3) var(--space-4);
           text-decoration: none;
           color: var(--mba-ink-faint);
           margin-bottom: -1px;
           white-space: nowrap;
-          transition: color 150ms ease;
           flex-shrink: 0;
           position: relative;
+          border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+          transition: color 120ms ease, background 120ms ease;
         }
 
+        /* Hover: subtle background tint + ink-soft text */
         .tab-item:hover {
-          color: var(--mba-ink-soft);
+          color: var(--mba-ink);
+          background: color-mix(in srgb, var(--mba-accent) 6%, transparent);
         }
 
+        /* Active: accent text, stronger background, accent underline */
         .tab-item--active {
-          color: var(--mba-ink);
+          color: var(--mba-accent) !important;
+          background: color-mix(in srgb, var(--mba-accent) 10%, transparent);
+          font-weight: 600;
         }
 
         .active-underline {
@@ -105,6 +111,7 @@ export function TabBar({ tabs, activeTab, onTabChange, queryParam = 'tab' }: Tab
           right: 0;
           height: 2px;
           background: var(--mba-accent);
+          border-radius: 2px 2px 0 0;
         }
 
         .tab-icon {
