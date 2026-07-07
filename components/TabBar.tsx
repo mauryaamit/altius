@@ -77,40 +77,45 @@ export function TabBar({ tabs, activeTab, onTabChange, queryParam = 'tab' }: Tab
         }
 
         .tab-item {
-          display: flex;
+          display: inline-flex;
           align-items: center;
           gap: var(--space-2);
-          padding: var(--space-3) var(--space-4);
+          padding: 10px 16px;
           text-decoration: none;
           color: var(--mba-ink-faint);
           margin-bottom: -1px;
           white-space: nowrap;
           flex-shrink: 0;
           position: relative;
-          border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-          transition: color 120ms ease, background 120ms ease;
+          border-radius: 4px 4px 0 0;
+          transition: color 120ms ease, background-color 120ms ease;
+          background-color: transparent;
         }
 
-        /* Hover: subtle background tint + ink-soft text */
+        /* Hover — visible tint */
         .tab-item:hover {
           color: var(--mba-ink);
-          background: color-mix(in srgb, var(--mba-accent) 6%, transparent);
+          background-color: rgba(30, 58, 95, 0.08);
         }
 
-        /* Active: accent text, stronger background, accent underline */
+        /* Active — strong accent */
         .tab-item--active {
-          color: var(--mba-accent) !important;
-          background: color-mix(in srgb, var(--mba-accent) 10%, transparent);
-          font-weight: 600;
+          color: #1E3A5F !important;
+          background-color: rgba(30, 58, 95, 0.10);
+          font-weight: 700;
+        }
+
+        .tab-item--active .tab-label {
+          color: #1E3A5F;
         }
 
         .active-underline {
           position: absolute;
-          bottom: 0;
+          bottom: -1px;
           left: 0;
           right: 0;
           height: 2px;
-          background: var(--mba-accent);
+          background: #1E3A5F;
           border-radius: 2px 2px 0 0;
         }
 
