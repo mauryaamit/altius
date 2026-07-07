@@ -112,7 +112,7 @@ export default function AltiusHomePage() {
         hasNewContent: true,
       },
       {
-        room: 'People',
+        room: 'HR & OB',
         slug: 'people',
         specialization: 'people',
         headline: people ? `${people.company}: ${people.sector}` : 'Psychological safety as a competitive moat',
@@ -148,8 +148,8 @@ export default function AltiusHomePage() {
         hasNewContent: false,
       },
       {
-        room: 'Pulse',
-        slug: 'pulse',
+        room: 'Digest',
+        slug: 'digest',
         headline: pulse ? pulse.whatHappened.slice(0, 80) + '...' : 'RBI holds rates; real return turns positive',
         teaser: pulse ? pulse.whyItMatters.slice(0, 120) + '...' : 'What it means for credit growth, housing, and fixed income.',
         hasNewContent: true,
@@ -163,8 +163,8 @@ export default function AltiusHomePage() {
       },
 
       {
-        room: 'Bites',
-        slug: 'bites',
+        room: 'Insights',
+        slug: 'insights',
         headline: bite ? bite.name : 'Survivorship Bias: why returning planes told the wrong story',
         teaser: bite ? bite.altitude.hook : 'Wald\'s WWII insight and what it means for startup postmortems.',
         hasNewContent: true,

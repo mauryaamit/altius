@@ -23,17 +23,18 @@ const dailyItems: NavItem[] = [
   { label: 'Consulting',  href: '/consulting' },
   { label: 'Operations',  href: '/operations' },
   { label: 'Strategy',    href: '/strategy' },
-  { label: 'People',      href: '/people' },
+  { label: 'HR & OB',     href: '/people' },
   { label: 'Companies',   href: '/companies' },
   { label: 'Roles',       href: '/roles' },
   { label: 'Guesstimate', href: '/guesstimate' },
   { label: 'GD Arena',    href: '/gd' },
-  { label: 'Pulse',       href: '/pulse' },
+  { label: 'Digest',      href: '/digest' },
   { label: 'Newspaper',   href: '/newspaper' },
-  { label: 'Bites',       href: '/bites' },
+  { label: 'Insights',    href: '/insights' },
 ]
 
 const referenceItems: NavItem[] = [
+  { label: 'Guide',       href: '/guide' },
   { label: 'English',     href: '/english' },
   { label: 'Interview',   href: '/interview' },
   { label: 'India Facts', href: '/india-facts' },
@@ -51,7 +52,7 @@ const youItems: NavItem[] = [
 // Bottom navigation items on mobile (<768px)
 const bottomNavItems = [
   { label: 'Home', href: '/', icon: <Home size={20} /> },
-  { label: 'Pulse', href: '/pulse', icon: <Activity size={20} /> },
+  { label: 'Digest', href: '/digest', icon: <Activity size={20} /> },
   { label: 'Guesstimate', href: '/guesstimate', icon: <Calculator size={20} /> },
   { label: 'Library', href: '/library', icon: <BookOpen size={20} /> },
 ]

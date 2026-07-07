@@ -23,7 +23,7 @@ const SPEC_CONFIG: Record<string, {
   consulting:  { label: 'Consulting',  chipColor: 'var(--chip-consulting)', tabs: ['concepts', 'case', 'hot-topic', 'company', 'think', 'library'] },
   operations:  { label: 'Operations',  chipColor: 'var(--chip-operations)', tabs: ['concepts', 'case', 'hot-topic', 'company', 'think', 'library'] },
   strategy:    { label: 'Strategy',    chipColor: 'var(--chip-strategy)',   tabs: ['concepts', 'case', 'hot-topic', 'company', 'think', 'library', 'opportunity'] },
-  people:      { label: 'People',      chipColor: 'var(--chip-people)',     tabs: ['concepts', 'case', 'hot-topic', 'company', 'think', 'library'] },
+  people:      { label: 'HR & OB',      chipColor: 'var(--chip-people)',     tabs: ['concepts', 'case', 'hot-topic', 'company', 'think', 'library'] },
 }
 
 const TAB_DEFS = [

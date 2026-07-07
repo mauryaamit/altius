@@ -14,7 +14,7 @@ const LABELS: Record<Specialization, string> = {
   consulting:  'Consulting',
   operations:  'Operations',
   strategy:    'Strategy',
-  people:      'People & Organization',
+  people:      'HR & OB',
 }
 
 export function generateStaticParams() {

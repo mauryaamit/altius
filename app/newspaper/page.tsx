@@ -180,22 +180,7 @@ export default function NewspaperPage() {
         )}
 
         {activeTab === 'mint' && (
-          <div className="daily-mint-container font-body text-center p-8 bg-mba-surface-sunk border border-mba-rule rounded-md">
-            <span className="font-mono text-mono-label text-mba-accent uppercase tracking-widest block mb-2">Today's Newspaper</span>
-            <h3 className="font-display text-h3 text-mba-ink font-bold mb-3">Read the full Livemint e-paper</h3>
-            <p className="font-body text-body text-mba-ink-soft mb-6 max-w-md mx-auto">
-              Access the comprehensive daily edition of Mint directly in the browser to browse current business sections, corporate earnings releases, and editorial opinions.
-            </p>
-            <a
-              href="https://epaper.livemint.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="read-btn font-mono text-mono-label text-center inline-block"
-              style={{ textDecoration: 'none', padding: '10px 20px', background: 'var(--mba-accent)', color: 'var(--mba-surface)', borderRadius: 'var(--radius-sm)' }}
-            >
-              Open Livemint e-Paper
-            </a>
-          </div>
+          <MintTab />
         )}
       </div>
 
@@ -299,6 +284,77 @@ export default function NewspaperPage() {
         }
         .fav-toggle-btn:hover {
           transform: scale(1.1);
+        }
+      `}</style>
+    </div>
+  )
+}
+
+function MintTab() {
+  const [mounted, setMounted] = React.useState(false)
+  React.useEffect(() => { setMounted(true) }, [])
+
+  const dateLabel = mounted
+    ? new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase()
+    : ''
+
+  return (
+    <div className="mint-editorial" style={{ maxWidth: 640 }}>
+      {/* Top hairline rule */}
+      <div style={{ height: 1, background: 'var(--mba-accent)', marginBottom: 'var(--space-6)' }} />
+
+      {/* Eyebrow */}
+      <p style={{ fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--mba-ink-faint)', marginBottom: 'var(--space-5)' }}>
+        {dateLabel && <span>{dateLabel} &nbsp;·&nbsp; </span>}DAILY MINT
+      </p>
+
+      {/* Headline */}
+      <h2 className="font-display text-mba-ink" style={{ fontSize: 'clamp(24px, 3vw, 32px)', lineHeight: 1.2, fontWeight: 600, marginBottom: 'var(--space-4)', textAlign: 'left' }}>
+        The Mint e-paper,<br />delivered to your desk.
+      </h2>
+
+      {/* Body */}
+      <p className="font-body text-mba-ink-soft" style={{ fontSize: 15, lineHeight: 1.65, marginBottom: 'var(--space-6)', textAlign: 'left', maxWidth: 480 }}>
+        Business, markets, policy and opinion — the full edition, every morning.
+      </p>
+
+      {/* Pill button */}
+      <a
+        href="https://epaper.livemint.com/"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mint-pill-btn"
+        style={{ textDecoration: 'none' }}
+      >
+        Open today's e-paper →
+      </a>
+
+      {/* Bottom hairline rule */}
+      <div style={{ height: 1, background: 'var(--mba-accent)', marginTop: 'var(--space-6)' }} />
+
+      <style jsx>{`
+        .mint-editorial {
+          padding: var(--space-2) 0;
+        }
+        .mint-pill-btn {
+          display: inline-block;
+          background: var(--mba-accent);
+          color: #ffffff;
+          padding: 10px 24px;
+          border-radius: 24px;
+          font-family: var(--font-mono);
+          font-size: 13px;
+          letter-spacing: 0.05em;
+          transition: background 150ms ease;
+        }
+        .mint-pill-btn:hover {
+          background: var(--mba-dark, #303A4C);
+        }
+        @media (max-width: 767px) {
+          .mint-pill-btn {
+            width: 100%;
+            text-align: center;
+          }
         }
       `}</style>
     </div>
