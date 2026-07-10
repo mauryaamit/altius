@@ -34,13 +34,18 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'Missing page or contentType parameter.' }, { status: 400 })
     }
 
-    const docId = `${page}_${contentType}_${subTag || ''}_${date}`
+    const docId = subTag ? `${page}_${contentType}_${subTag}_${date}` : `${page}_${contentType}_${date}`
 
     // 1. Check if content already exists in Firestore (Global Cache)
     const cachedDocRef = doc(db, 'daily_content', docId)
     const cachedSnap = await getDoc(cachedDocRef)
     if (cachedSnap.exists()) {
-      return NextResponse.json(cachedSnap.data())
+      const data = cachedSnap.data()
+      // Normalize 'content' to 'contentBody' if needed
+      if (data && !data.contentBody && data.content) {
+        data.contentBody = data.content
+      }
+      return NextResponse.json(data)
     }
 
     // 2. Not found in Firestore: Generate using Gemini API
