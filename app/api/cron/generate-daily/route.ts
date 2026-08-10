@@ -289,34 +289,66 @@ async function writeContent(
   await batch.commit();
 }
 
-// ─── HELPER: Lazy load Gemini model ────────────────────────────────
-let modelInstance: any = null;
-
-function getModel() {
-  if (modelInstance) return modelInstance;
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    throw new Error('[generate-daily] GEMINI_API_KEY is not set in environment variables.');
-  }
+// ─── HELPER: Build a Gemini model instance for a given API key ─────
+function buildModel(apiKey: string) {
   const genAI = new GoogleGenerativeAI(apiKey);
-  modelInstance = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
-  return modelInstance;
+  return genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 }
 
-// ─── HELPER: Call Gemini safely ────────────────────────────────────
+// ─── HELPER: Call Gemini with automatic key fallback ───────────────
+// Strategy:
+//   1. Try GEMINI_API_KEY (primary — higher quota)
+//   2. If that returns 429 (quota exceeded), retry with GEMINI_API_KEY_FALLBACK
+//   3. If fallback also fails, surface the error
 async function callGemini(prompt: string): Promise<object> {
+  const primaryKey = process.env.GEMINI_API_KEY;
+  const fallbackKey = process.env.GEMINI_API_KEY_FALLBACK;
+
+  if (!primaryKey) {
+    throw new Error('[generate-daily] GEMINI_API_KEY is not set in environment variables.');
+  }
+
   const fullPrompt = `${SYSTEM}\n\n${prompt}`;
-  const model = getModel();
-  const result = await model.generateContent(fullPrompt);
-  const text = result.response.text().trim();
+
+  // Helper: run a single attempt with the given key
+  async function attempt(apiKey: string, label: string): Promise<string> {
+    const model = buildModel(apiKey);
+    const result = await model.generateContent(fullPrompt);
+    const text = result.response.text().trim();
+    console.log(`[callGemini] Response received via ${label} key.`);
+    return text;
+  }
+
+  let raw: string;
+
+  try {
+    raw = await attempt(primaryKey, 'PRIMARY');
+  } catch (primaryErr: any) {
+    const isPrimary429 =
+      primaryErr?.message?.includes('429') ||
+      primaryErr?.message?.includes('quota') ||
+      primaryErr?.message?.includes('RESOURCE_EXHAUSTED');
+
+    if (isPrimary429 && fallbackKey) {
+      console.warn('[callGemini] Primary key quota exhausted — switching to FALLBACK key.');
+      try {
+        raw = await attempt(fallbackKey, 'FALLBACK');
+      } catch (fallbackErr: any) {
+        console.error('[callGemini] Fallback key also failed:', fallbackErr?.message);
+        throw fallbackErr;
+      }
+    } else {
+      throw primaryErr;
+    }
+  }
 
   // Strip any accidental markdown wrapping
-  const cleaned = text.replace(/^```json\s*/i, '').replace(/```\s*$/i, '').trim();
+  const cleaned = raw.replace(/^```json\s*/i, '').replace(/```\s*$/i, '').trim();
 
   try {
     return JSON.parse(cleaned);
   } catch {
-    console.error('[callGemini] JSON parse failed. Raw response:', text.substring(0, 500));
+    console.error('[callGemini] JSON parse failed. Raw response:', raw.substring(0, 500));
     throw new Error('Gemini returned invalid JSON');
   }
 }
