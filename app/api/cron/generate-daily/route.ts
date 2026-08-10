@@ -65,7 +65,139 @@ Calcutta, ISB, XLRI, and SP Jain. All content must be:
 - Every number must include source and approximate date (e.g. "as of FY2025")
 - Analytically rigorous but explained in plain, jargon-free English
 - Detailed and comprehensive — never thin or generic
+- Cite and draw from the authoritative sources specified in each prompt
 - Output ONLY valid JSON. No markdown, no backticks, no preamble, no postamble.`;
+
+// ─── SOURCE GROUNDING LIBRARY ─────────────────────────────────────
+// Curated, domain-specific authoritative sources per page and content type.
+// Injected into every Gemini prompt to ensure grounded, credible content.
+
+const SOURCES: Record<string, string> = {
+  marketing: `Authoritative sources to draw from and cite:
+- Harvard Business Review (strategy, consumer behavior, brand management)
+- WARC (advertising effectiveness, campaign benchmarks, global marketing data)
+- Think with Google (digital marketing trends, consumer intent data)
+- HubSpot (inbound marketing, B2B marketing benchmarks, SaaS metrics)
+- Marketing Week (UK/global marketing industry news and brand case studies)
+- Nielsen / Kantar (consumer insights, brand tracking, media measurement)
+- FMCG company Annual Reports (HUL, P&G, Nestlé, ITC — for India-specific data)`,
+
+  finance: `Authoritative sources to draw from and cite:
+- Aswath Damodaran (damodaran.com — valuation, cost of capital, industry multiples)
+- CFA Institute (corporate finance standards, ESG, risk frameworks)
+- RBI (rbi.org.in — India monetary policy, banking sector data, financial stability reports)
+- SEBI (sebi.gov.in — capital market regulation, IPO guidelines, institutional data)
+- NSE (nseindia.com — equity data, derivatives, index performance)
+- BSE (bseindia.com — listed company filings, market cap data)
+- Financial Times / Bloomberg (global capital markets, M&A, macro finance)
+- Company Annual Reports and Investor Presentations (for specific company financials)`,
+
+  consulting: `Authoritative sources to draw from and cite:
+- McKinsey & Company Insights (mckinsey.com/insights — strategy, organizational transformation)
+- BCG Insights (bcg.com/insights — business model disruption, corporate strategy)
+- Bain & Company Insights (bain.com/insights — management consulting, PE, customer loyalty)
+- Harvard Business Review (strategy execution, competitive dynamics, leadership)
+- Strategy+Business (PwC's strategy journal — transformation, resilience, leadership)
+- Kearney / Deloitte / EY Insights (sector-specific consulting research)`,
+
+  strategy: `Authoritative sources to draw from and cite:
+- McKinsey & Company Insights (mckinsey.com/insights)
+- BCG Henderson Institute (bcg.com — platform strategy, disruption, ecosystems)
+- Bain & Company Insights (bain.com)
+- Harvard Business Review (competitive strategy, innovation frameworks)
+- Strategy+Business (PwC strategy journal)
+- MIT Sloan Management Review (technology strategy, digital transformation)
+- a16z (andreessen horowitz — technology and platform business models)`,
+
+  operations: `Authoritative sources to draw from and cite:
+- MIT OpenCourseWare (ocw.mit.edu — operations research, supply chain optimization)
+- ASCM (ascm.org — supply chain management standards and benchmarks)
+- McKinsey Operations Practice (mckinsey.com — manufacturing, logistics, automation)
+- BCG Operations (bcg.com — supply chain resilience, Industry 4.0)
+- Supply Chain Dive (supplychaindive.com — current operations news and case studies)
+- Gartner Supply Chain Top 25 (annual global supply chain rankings)
+- Company Annual Reports (for logistics, inventory, and operational efficiency data)`,
+
+  people: `Authoritative sources to draw from and cite:
+- CIPD (cipd.org — HR standards, workforce research, organizational behavior)
+- Harvard Business Review (leadership, organizational psychology, performance management)
+- McKinsey People & Organizational Performance (mckinsey.com/capabilities/people-and-organizational-performance)
+- SHRM (shrm.org — HR policy, talent management, compensation benchmarks)
+- MIT Sloan Management Review (people analytics, DEI, culture research)
+- Gallup Workplace Research (gallup.com — employee engagement, manager effectiveness)
+- LinkedIn Talent Trends (workforce data, hiring patterns, skills demand)`,
+
+  guesstimate: `Authoritative sources to use for base rates and assumptions:
+- RBI Annual Report and Monthly Bulletin (rbi.org.in — India GDP, inflation, banking data)
+- IMF World Economic Outlook (imf.org — global GDP, growth forecasts)
+- World Bank Data (data.worldbank.org — population, income, sector data)
+- OECD Statistics (stats.oecd.org — developed economy data)
+- BIS Statistics (bis.org — global financial flows, credit data)
+- Economic Times / Business Standard / Moneycontrol (India market sizing estimates)
+- Company Annual Reports and Investor Presentations (for sector revenue benchmarks)
+- IBEF (ibef.org — India industry reports and sector data)
+- Census of India / MOSPI (India population and economic data)`,
+
+  gd: `Authoritative sources to draw from and cite:
+- Mint (livemint.com — Indian business and economic news)
+- Economic Times (economictimes.com — India corporate, markets, policy)
+- Business Standard (business-standard.com — India business analysis)
+- Indian Express (indianexpress.com — policy, current affairs)
+- The Hindu (thehindu.com — policy, economy, India context)
+- Wall Street Journal (wsj.com — global business, US economy)
+- New York Times (nytimes.com — global current affairs and opinion)
+- Al Jazeera (aljazeera.com — global geopolitics and emerging markets)
+- McKinsey Global Institute (mckinsey.com — macro research)
+- IMF / World Bank (global economic context and data)`,
+
+  digest: `Authoritative sources to draw from and cite:
+- Financial Times (ft.com — global finance, markets, corporate news)
+- The Economist (economist.com — macro analysis, emerging markets, policy)
+- Bloomberg (bloomberg.com — financial markets, corporate finance, economic data)
+- Reuters (reuters.com — breaking business and financial news)
+- Economic Times (economictimes.com — India markets, corporate, policy)
+- Business Standard (business-standard.com — India business analysis)
+- RBI (rbi.org.in — India monetary policy and financial system)
+- SEBI / NSE / BSE (India capital markets and regulatory data)
+- Moneycontrol (moneycontrol.com — India stock markets, personal finance)
+- Company Annual Reports and Investor Presentations`,
+
+  newspaper: `Authoritative news sources to draw from:
+- Mint (livemint.com — India business)
+- Economic Times (economictimes.com — India economy and corporate)
+- Business Times (businesstimes.com.sg — Asia-Pacific business)
+- Indian Express (indianexpress.com — India policy and current affairs)
+- The Hindu (thehindu.com — India politics and economy)
+- Wall Street Journal (wsj.com — global business)
+- New York Times (nytimes.com — global current affairs)
+- Al Jazeera (aljazeera.com — global geopolitics)
+- Financial Times (ft.com — global finance and markets)
+- The Economist (economist.com — global policy and macro analysis)`,
+
+  insights: `Authoritative sources for business concepts and mental models:
+- Harvard Business Review (management research, behavioral economics applications)
+- Daniel Kahneman — Thinking, Fast and Slow (cognitive biases)
+- Nassim Taleb — The Black Swan, Antifragile (risk and uncertainty)
+- Freakonomics Research (economics of everyday behavior)
+- Charlie Munger / Warren Buffett Letters (mental models in investing and business)
+- McKinsey Insights (organizational behavior and management research)
+- Richard Thaler / Behavioral Economics research (nudge theory, choice architecture)
+- HBR, MIT Sloan, and Strategy+Business case studies`,
+
+  english: `Authoritative sources for English and vocabulary:
+- Merriam-Webster Dictionary (merriam-webster.com)
+- Oxford English Dictionary (oed.com)
+- Harvard Business Review (professional writing standards, business English usage)
+- The Economist Style Guide (precision, clarity, brevity)
+- Strunk & White — The Elements of Style
+- MBA application essays from admitted candidates (for professional English tone)
+- IIM / CAT / GMAT verbal section style (for MBA English proficiency standards)`,
+};
+
+// Returns the sources block to inject into a Gemini prompt
+function getSources(category: string): string {
+  return SOURCES[category] || '';
+}
 
 // ─── MAIN ORCHESTRATOR ────────────────────────────────────────────
 async function generateAllContent(date: string) {
@@ -220,9 +352,15 @@ async function generateCase(page: string, date: string) {
     people: 'organizational behavior, leadership dilemmas, culture change, talent management, DEI, performance management',
   };
 
+  const sources = getSources(page);
+
   const data = await callGemini(`
 Generate one detailed MBA case study for the ${page.toUpperCase()} specialization.
 Focus areas for ${page}: ${functionDescriptions[page]}.
+
+${sources}
+
+All company data (revenue, market share, margins) MUST be sourced from the listed sources above or from official company annual reports / investor presentations. Cite the source name and approximate date for every metric.
 
 DO NOT cover any company/topic already in this list: [${exclusions}]
 
@@ -302,10 +440,16 @@ async function generateHotTopic(page: string, date: string) {
   const used = await getUsedTopicKeys(page, 'hotTopic');
   const exclusions = Array.from(used).join(', ') || 'none yet';
 
+  const sources = getSources(page);
+
   const data = await callGemini(`
 Generate one current business hot topic for the ${page.toUpperCase()} specialization page.
 This must be a REAL, CURRENT development — something that has happened in the
 last 6 months that a ${page} professional or MBA student should know about.
+
+${sources}
+
+Base this on real, verifiable developments covered in the sources above. Every data point must name its source and approximate date.
 
 DO NOT cover: [${exclusions}]
 
@@ -379,9 +523,15 @@ async function generateCompanySpotlight(page: string, date: string) {
     people: 'culture practice, leadership model, notable people/talent strategy',
   };
 
+  const sources = getSources(page);
+
   const data = await callGemini(`
 Generate one Company Spotlight for the ${page.toUpperCase()} specialization page.
 Mix Indian and global companies. Mix large incumbents with strong challengers.
+
+${sources}
+
+All financial metrics (revenue, margins, market cap, market share) must be drawn from official company annual reports, investor presentations, NSE/BSE filings, or the authoritative sources above. Cite the source name for every metric.
 
 DO NOT feature: [${exclusions}]
 
@@ -443,10 +593,16 @@ async function generateThink(page: string, date: string) {
   const used = await getUsedTopicKeys(page, 'think');
   const exclusions = Array.from(used).join(', ') || 'none yet';
 
+  const sources = getSources(page);
+
   const data = await callGemini(`
 Generate one deep thinking question for the ${page.toUpperCase()} specialization.
 This must challenge assumptions, require layered thinking, and have no obvious
 single answer. It should blend ${page} with psychology, economics, or society.
+
+${sources}
+
+When providing real-world examples, perspectives, and evidence, draw from the authoritative sources listed above. Name specific reports, researchers, or publications to add credibility.
 
 DO NOT use questions similar to: [${exclusions}]
 
@@ -500,12 +656,17 @@ Return JSON:
 async function generateGuesstimates(date: string) {
   const used = await getUsedTopicKeys('guesstimate', 'problem');
   const exclusions = Array.from(used).join(', ') || 'none yet';
+  const sources = getSources('guesstimate');
 
   const data = await callGemini(`
 Generate exactly 3 MBA guesstimate problems for today. They must cover
 DIFFERENT sectors and DIFFERENT difficulty levels (one easy, one medium,
 one hard). Mix Indian and global contexts. Mix question types: market sizing,
 revenue estimation, unit count, demand estimation.
+
+${sources}
+
+All base-rate assumptions (India population, GDP, mobile penetration, average household income, sector market size) must reference the sources above. Every numerical assumption must state its source and date.
 
 DO NOT reuse these topics: [${exclusions}]
 
@@ -633,9 +794,15 @@ async function generateGDTopic(tag: string, date: string) {
     'Ethical Dilemma': 'a personal or organizational ethical dilemma — a situation where values conflict',
   };
 
+  const sources = getSources('gd');
+
   const data = await callGemini(`
 Generate one GD topic for the ${tag.toUpperCase()} category.
 This should be: ${tagContext[tag]}.
+
+${sources}
+
+All data points in framing, for/against arguments, and key statistics must reference the sources above. Name the publication and approximate date for every claim.
 
 DO NOT use topics similar to: [${exclusions}]
 
@@ -719,12 +886,18 @@ async function generateDigestStories(date: string) {
   const used = await getUsedTopicKeys('pulse', 'pulseStory');
   const exclusions = Array.from(used).join(', ') || 'none yet';
 
+  const sources = getSources('digest');
+
   const data = await callGemini(`
 Generate exactly 5 Digest stories for today, one for each of these categories:
 Markets, Policy, Corporate, Trade, Tech.
 
 These must be REAL, CURRENT business/economic developments from the last 2 weeks.
 Each story must be MBA-relevant — not general news.
+
+${sources}
+
+Every story must explicitly name the publication and date it was sourced from. Do not invent statistics — only cite what has appeared in these or equivalent tier-1 publications.
 
 DO NOT repeat these topics: [${exclusions}]
 
@@ -773,9 +946,15 @@ async function generateInsights(date: string) {
   const used = await getUsedTopicKeys('bites', 'bite');
   const exclusions = Array.from(used).join(', ') || 'none yet';
 
+  const sources = getSources('insights');
+
   const data = await callGemini(`
 Generate one Insights entry. These rotate through categories:
 cognitive bias / economic effect / business law or principle / mental model.
+
+${sources}
+
+In the depth section, reference the specific book, researcher, or paper that named or formalized this concept. Include at least one real-world Indian business example and one global example. Name all sources explicitly.
 
 DO NOT repeat: [${exclusions}]
 
@@ -850,10 +1029,16 @@ async function generateNewspaperBrief(date: string) {
   const used = await getUsedTopicKeys('newspaper', 'brief');
   const exclusions = Array.from(used).join(', ') || 'none yet';
 
+  const sources = getSources('newspaper');
+
   const data = await callGemini(`
 Generate today's Newspaper Brief: 5 curated MBA-relevant news items for ${date}.
 These should be the 5 most important business/economic developments an MBA student
 should know about today. Mix Indian and global.
+
+${sources}
+
+Each brief item must identify which publication it is sourced from and the approximate date. Only report developments that have genuinely appeared in these or equivalent tier-1 publications.
 
 DO NOT repeat these topics: [${exclusions}]
 
@@ -891,9 +1076,16 @@ async function generateVocabulary(date: string) {
   const used = await getUsedTopicKeys('english', 'vocabulary');
   const exclusions = Array.from(used).join(', ') || 'none yet';
 
+  const sources = getSources('english');
+
   const data = await callGemini(`
 Generate 4 vocabulary words for MBA/interview preparation.
 Focus on words useful in business communication, GDs, and essays.
+
+${sources}
+
+Where relevant, show the word used in context drawn from HBR articles, The Economist, or MBA application essays to demonstrate professional register.
+
 DO NOT use: [${exclusions}]
 
 Return JSON array of 4:
