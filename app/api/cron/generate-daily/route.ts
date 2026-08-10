@@ -324,13 +324,16 @@ async function callGemini(prompt: string): Promise<object> {
   try {
     raw = await attempt(primaryKey, 'PRIMARY');
   } catch (primaryErr: any) {
-    const isPrimary429 =
+    const shouldFallback =
       primaryErr?.message?.includes('429') ||
       primaryErr?.message?.includes('quota') ||
+      primaryErr?.message?.includes('403') ||
+      primaryErr?.message?.includes('blocked') ||
+      primaryErr?.message?.includes('disabled') ||
       primaryErr?.message?.includes('RESOURCE_EXHAUSTED');
 
-    if (isPrimary429 && fallbackKey) {
-      console.warn('[callGemini] Primary key quota exhausted — switching to FALLBACK key.');
+    if (shouldFallback && fallbackKey) {
+      console.warn('[callGemini] Primary key failed — switching to FALLBACK key. Error:', primaryErr?.message);
       try {
         raw = await attempt(fallbackKey, 'FALLBACK');
       } catch (fallbackErr: any) {

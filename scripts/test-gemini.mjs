@@ -101,9 +101,15 @@ try {
   ({ text: raw, elapsed, label: usedLabel } = await attempt(primaryKey, 'PRIMARY'));
   console.log(`✅ Step 3 — PRIMARY key responded in ${elapsed}s`);
 } catch (e) {
-  const is429 = e?.message?.includes('429') || e?.message?.includes('quota') || e?.message?.includes('RESOURCE_EXHAUSTED');
-  if (is429 && fallbackKey) {
-    console.warn(`⚠️  Step 3 — PRIMARY key quota hit: ${e.message.split('\n')[0]}`);
+  const isFallbackEligible =
+    e?.message?.includes('429') ||
+    e?.message?.includes('quota') ||
+    e?.message?.includes('403') ||
+    e?.message?.includes('blocked') ||
+    e?.message?.includes('RESOURCE_EXHAUSTED');
+
+  if (isFallbackEligible && fallbackKey) {
+    console.warn(`⚠️  Step 3 — PRIMARY key failed (${e.message.split('\n')[0]})`);
     console.log('⏳ Step 4 — Trying FALLBACK key...');
     try {
       ({ text: raw, elapsed, label: usedLabel } = await attempt(fallbackKey, 'FALLBACK'));
@@ -113,7 +119,7 @@ try {
       process.exit(1);
     }
   } else {
-    console.error('❌ Step 3 — PRIMARY key failed (non-quota error):', e.message.split('\n')[0]);
+    console.error('❌ Step 3 — PRIMARY key failed:', e.message.split('\n')[0]);
     process.exit(1);
   }
 }
