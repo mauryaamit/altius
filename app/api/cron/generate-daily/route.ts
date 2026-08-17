@@ -292,7 +292,7 @@ async function writeContent(
 // ─── HELPER: Build a Gemini model instance for a given API key ─────
 function buildModel(apiKey: string) {
   const genAI = new GoogleGenerativeAI(apiKey);
-  return genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+  return genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 }
 
 // ─── HELPER: Call Gemini with automatic key fallback ───────────────

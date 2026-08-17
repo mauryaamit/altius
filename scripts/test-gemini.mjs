@@ -56,8 +56,8 @@ try {
 function buildModel(apiKey) {
   const genAI = new GoogleGenerativeAI(apiKey);
   return genAI.getGenerativeModel({
-    model: 'gemini-2.0-flash',
-    generationConfig: { responseMimeType: 'application/json', temperature: 0.9, maxOutputTokens: 512 },
+    model: 'gemini-2.5-flash',
+    generationConfig: { responseMimeType: 'application/json', temperature: 0.9, maxOutputTokens: 2048 },
     systemInstruction: `You are an elite MBA knowledge editor for Altius.
 Output ONLY valid JSON. No markdown, no backticks, no preamble, no postamble.`,
   });
