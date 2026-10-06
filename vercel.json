@@ -8,6 +8,10 @@
     {
       "path": "/api/cron/cleanup-old-content",
       "schedule": "0 2 * * 0"
+    },
+    {
+      "path": "/api/cron/ingest-newspapers",
+      "schedule": "30 14 * * *"
     }
   ]
 }

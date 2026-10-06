@@ -40,3 +40,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# telegram MTProto sessions
+*.session
+*.session-journal
+.telegram-session*
+
