@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAdminDb, getAdminStorageBucket } from '@/lib/firebase-admin';
+import { getAdminDb } from '@/lib/firebase-admin';
 import { TARGET_NEWSPAPER_SLUGS } from '@/lib/telegram/classifier';
 
 export const dynamic = 'force-dynamic';
@@ -18,12 +18,10 @@ const TARGET_METADATA: Record<string, { displayName: string; category: string }>
 export async function GET(request: NextRequest) {
   try {
     const db = getAdminDb();
-    const bucket = getAdminStorageBucket();
-
     const searchParams = request.nextUrl.searchParams;
     const requestedDate = searchParams.get('date');
 
-    // Fetch all records from 'newspapers' collection
+    // Fetch all records from 'newspapers' collection (lightweight metadata)
     const snapshot = await db.collection('newspapers').get();
 
     // Group documents by date and slug
@@ -42,59 +40,99 @@ export async function GET(request: NextRequest) {
     });
 
     // Sorted dates descending (newest first)
-    const availableDates = Array.from(datesSet).sort((a, b) => b.localeCompare(a)).slice(0, 10);
+    const sortedStoredDates = Array.from(datesSet).sort((a, b) => b.localeCompare(a));
+    const todayDate = sortedStoredDates[0] || new Date().toISOString().substring(0, 10);
+    const previousDate = sortedStoredDates[1] || null;
 
-    const activeDate = requestedDate || (availableDates[0] || new Date().toISOString().substring(0, 10));
-    const activeDateDocs = docsByDate[activeDate] || {};
-
-    // Build array of 8 target cards for activeDate
-    const newspapers = await Promise.all(
-      TARGET_NEWSPAPER_SLUGS.map(async slug => {
-        const doc = activeDateDocs[slug];
+    // Helper to build 8 target cards for a given date
+    const buildCardsForDate = (dateStr: string) => {
+      const dateDocs = docsByDate[dateStr] || {};
+      return TARGET_NEWSPAPER_SLUGS.map(slug => {
+        const doc = dateDocs[slug];
         const meta = TARGET_METADATA[slug] || { displayName: slug, category: slug };
 
-        if (!doc) {
+        if (!doc || doc.status !== 'ready') {
           return {
             slug,
             displayName: meta.displayName,
             category: meta.category,
-            publicationDate: activeDate,
+            publicationDate: dateStr,
             edition: 'none',
             status: 'not_available',
             fileUrl: null,
-            originalTelegramFilename: null,
             fileSize: 0,
+            isStored: true,
           };
         }
 
         const rawFileUrl = doc.fileUrl || doc.downloadUrl;
-        const fileUrl = rawFileUrl ? `/api/newspaper/file?url=${encodeURIComponent(rawFileUrl)}` : `/api/newspaper/file?date=${activeDate}&slug=${slug}`;
+        const fileUrl = rawFileUrl ? `/api/newspaper/file?url=${encodeURIComponent(rawFileUrl)}` : `/api/newspaper/file?date=${dateStr}&slug=${slug}`;
 
         return {
           slug: doc.slug || slug,
           displayName: doc.displayName || meta.displayName,
           category: doc.category || meta.category,
-          publicationDate: doc.publicationDate || activeDate,
+          publicationDate: doc.publicationDate || dateStr,
           edition: doc.edition || 'main',
           status: 'ready',
           fileUrl,
           originalTelegramFilename: doc.originalTelegramFilename || null,
           fileSize: doc.fileSize || 0,
           ingestedAt: doc.ingestedAt || null,
+          isStored: true,
         };
-      })
-    );
+      });
+    };
 
+    // If specific requestedDate parameter is passed for single-date query
+    if (requestedDate) {
+      const isStored = sortedStoredDates.includes(requestedDate);
+      if (isStored) {
+        return NextResponse.json({
+          success: true,
+          requestedDate,
+          isStored: true,
+          newspapers: buildCardsForDate(requestedDate),
+        });
+      } else {
+        // Return lightweight metadata for on-demand target cards
+        const ondemandCards = TARGET_NEWSPAPER_SLUGS.map(slug => {
+          const meta = TARGET_METADATA[slug] || { displayName: slug, category: slug };
+          return {
+            slug,
+            displayName: meta.displayName,
+            category: meta.category,
+            publicationDate: requestedDate,
+            edition: 'source',
+            status: 'ready_ondemand',
+            fileUrl: `/api/newspaper/ondemand?date=${requestedDate}&slug=${slug}`,
+            fileSize: 0,
+            isStored: false,
+          };
+        });
+
+        return NextResponse.json({
+          success: true,
+          requestedDate,
+          isStored: false,
+          newspapers: ondemandCards,
+        });
+      }
+    }
+
+    // Default metadata payload for /newspaper landing page
     return NextResponse.json({
       success: true,
-      selectedDate: activeDate,
-      availableDates,
-      newspapers,
+      todayDate,
+      todayNewspapers: buildCardsForDate(todayDate),
+      previousDate,
+      previousNewspapers: previousDate ? buildCardsForDate(previousDate) : [],
+      storedDates: sortedStoredDates.slice(0, 2),
     });
   } catch (error: any) {
     console.error('[API /api/newspaper] Error:', error);
     return NextResponse.json(
-      { success: false, error: error.message || 'Internal server error' },
+      { success: false, error: 'Unable to load newspaper metadata.' },
       { status: 500 }
     );
   }

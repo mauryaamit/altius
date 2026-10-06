@@ -452,12 +452,12 @@ function toJSNumber(val) {
 }
 
 /**
- * 10-Day Retention Cleanup
- * Keeps top 10 unique publication dates in descending order.
- * Deletes GitHub Releases and Firestore docs older than 10 dates.
+ * Strict 2-Day Retention Cleanup
+ * Keeps strictly the newest 2 unique publication dates in descending order.
+ * Deletes GitHub Releases, release assets, git tags, and Firestore docs older than 2 dates.
  */
 async function executeRetentionCleanup() {
-  console.log('🧹 Running 10-Day Retention Cleanup...');
+  console.log('🧹 Running Strict 2-Day Retention Cleanup...');
 
   const snapshot = await db.collection('newspapers').get();
   if (snapshot.empty) return;
@@ -472,17 +472,26 @@ async function executeRetentionCleanup() {
 
   const sortedDates = Array.from(datesSet).sort((a, b) => b.localeCompare(a));
 
-  if (sortedDates.length <= 10) {
-    console.log(`   Retention OK: ${sortedDates.length} publication dates (<= 10).`);
+  console.log(`\n======================================================`);
+  console.log(`   RETENTION CLEANUP`);
+  console.log(`   Publication dates found: ${sortedDates.length}`);
+
+  if (sortedDates.length <= 2) {
+    console.log(`   Keeping: ${sortedDates.join(', ')}`);
+    console.log(`   Deleting: None (All within 2-day retention policy)`);
+    console.log(`======================================================\n`);
     return;
   }
 
-  const allowedDates = new Set(sortedDates.slice(0, 10));
-  const expiredDates = sortedDates.slice(10);
+  const allowedDates = new Set(sortedDates.slice(0, 2));
+  const expiredDates = sortedDates.slice(2);
 
-  console.log(`   Pruning expired dates older than top 10: ${expiredDates.join(', ')}`);
+  console.log(`   Keeping: ${sortedDates.slice(0, 2).join(', ')}`);
+  console.log(`   Deleting: ${expiredDates.join(', ')}`);
 
   let prunedDocCount = 0;
+  let prunedReleaseCount = 0;
+
   const token = process.env.GITHUB_TOKEN;
   const repoFull = process.env.GITHUB_REPOSITORY || 'mauryaamit/altius';
   const [owner, repo] = repoFull.split('/');
@@ -501,7 +510,7 @@ async function executeRetentionCleanup() {
           const relData = await relRes.json();
           await fetch(`https://api.github.com/repos/${owner}/${repo}/releases/${relData.id}`, { method: 'DELETE', headers });
           await fetch(`https://api.github.com/repos/${owner}/${repo}/git/refs/tags/${tagName}`, { method: 'DELETE', headers });
-          console.log(`   Deleted GitHub Release ${tagName}`);
+          prunedReleaseCount++;
         }
       } catch (e) {
         console.error(`   Warning deleting release for ${expDate}:`, e.message);
@@ -517,7 +526,9 @@ async function executeRetentionCleanup() {
     }
   }
 
-  console.log(`✅ Cleaned up ${prunedDocCount} expired Firestore records & releases.\n`);
+  console.log(`   Deleted releases: ${prunedReleaseCount}`);
+  console.log(`   Deleted Firestore documents: ${prunedDocCount}`);
+  console.log(`======================================================\n`);
 }
 
 runIngestionPipeline().catch(err => {

@@ -2,18 +2,39 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Calendar, FileText, CheckCircle2, XCircle, ArrowRight, ChevronRight, Clock } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import {
+  FileText,
+  CheckCircle2,
+  XCircle,
+  ArrowRight,
+  Clock,
+  Search,
+  Loader2,
+  Calendar as CalendarIcon,
+  Sparkles,
+} from 'lucide-react';
 
-interface NewspaperCardData {
+interface NewspaperCard {
   slug: string;
   displayName: string;
   category: string;
   publicationDate: string;
   edition: string;
-  status: 'ready' | 'not_available';
+  status: string;
   fileUrl: string | null;
-  originalTelegramFilename: string | null;
   fileSize: number;
+  isStored: boolean;
+}
+
+interface MetadataResponse {
+  success: boolean;
+  todayDate: string;
+  todayNewspapers: NewspaperCard[];
+  previousDate: string | null;
+  previousNewspapers: NewspaperCard[];
+  storedDates: string[];
+  error?: string;
 }
 
 const TARGET_SLUGS = [
@@ -28,138 +49,170 @@ const TARGET_SLUGS = [
 ];
 
 export default function NewspaperPage() {
-  const [selectedDate, setSelectedDate] = useState<string>('');
-  const [availableDates, setAvailableDates] = useState<string[]>([]);
-  const [newspapers, setNewspapers] = useState<NewspaperCardData[]>([]);
+  const router = useRouter();
+
+  const [data, setData] = useState<MetadataResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchNewspapers(selectedDate);
-  }, [selectedDate]);
+  // Older date picker state
+  const [olderDate, setOlderDate] = useState<string>('');
+  const [olderCards, setOlderCards] = useState<NewspaperCard[]>([]);
+  const [olderLoading, setOlderLoading] = useState<boolean>(false);
+  const [fetchingSlug, setFetchingSlug] = useState<string | null>(null);
 
-  const fetchNewspapers = async (dateParam?: string) => {
+  useEffect(() => {
+    fetchMainMetadata();
+  }, []);
+
+  const fetchMainMetadata = async () => {
     setLoading(true);
     setError(null);
     try {
-      const url = dateParam ? `/api/newspaper?date=${dateParam}` : '/api/newspaper';
-      const res = await fetch(url);
-      const data = await res.json();
-
-      if (data.success) {
-        setAvailableDates(data.availableDates || []);
-        setSelectedDate(data.selectedDate || new Date().toISOString().substring(0, 10));
-        setNewspapers(data.newspapers || []);
+      const res = await fetch('/api/newspaper');
+      const json = await res.json();
+      if (json.success) {
+        setData(json);
+        // Default older date to 3 days ago for quick exploration
+        const defaultOlder = new Date(Date.now() - 3 * 86400000).toISOString().substring(0, 10);
+        setOlderDate(defaultOlder);
       } else {
-        setError(data.error || 'Failed to load newspapers');
+        setError(json.error || 'Unable to load newspaper desk metadata.');
       }
-    } catch (err: any) {
-      setError('Network error fetching newspapers');
+    } catch {
+      setError('Network error connecting to newspaper desk.');
     } finally {
       setLoading(false);
     }
   };
 
-  const formattedDate = selectedDate
-    ? new Date(selectedDate).toLocaleDateString('en-IN', {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-      }).toUpperCase()
-    : 'TODAY';
+  const fetchOlderMetadata = async (dateVal: string) => {
+    if (!dateVal) return;
+    setOlderLoading(true);
+    try {
+      const res = await fetch(`/api/newspaper?date=${dateVal}`);
+      const json = await res.json();
+      if (json.success && json.newspapers) {
+        setOlderCards(json.newspapers);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setOlderLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (olderDate) {
+      fetchOlderMetadata(olderDate);
+    }
+  }, [olderDate]);
+
+  const handleFetchAndRead = (slug: string, date: string) => {
+    setFetchingSlug(slug);
+    router.push(`/newspaper/${date}/${slug}?mode=ondemand`);
+  };
+
+  const formatDateLabel = (dateStr?: string) => {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    }).toUpperCase();
+  };
 
   return (
-    <div className="newspaper-room-root max-w-5xl mx-auto px-4 py-8">
-      {/* Header */}
-      <header className="news-header mb-8 pb-6 border-b border-mba-rule border-l-4 border-l-mba-accent pl-4">
-        <span className="font-mono text-xs uppercase tracking-widest text-mba-ink-faint block mb-2">
-          {formattedDate}
-        </span>
-        <h1 className="font-display text-4xl text-mba-ink font-semibold" style={{ lineHeight: '1.15' }}>
+    <div className="newspaper-desk-root min-h-screen bg-[#FDFBF7] text-[#1A1918] px-4 py-8 md:px-8 max-w-6xl mx-auto">
+      {/* ─── SECTION 1: TODAY ───────────────────────────────────────────── */}
+      <header className="desk-header mb-10 pb-6 border-b border-[#E2DDD5]">
+        <div className="flex items-center gap-2 mb-3">
+          <span className="w-2 h-2 rounded-full bg-amber-600" />
+          <span className="font-mono text-xs uppercase tracking-widest text-[#64748B] font-semibold">
+            TODAY &bull; {formatDateLabel(data?.todayDate)}
+          </span>
+        </div>
+        <h1 className="font-display text-4xl md:text-5xl font-semibold text-[#0F172A] tracking-tight leading-tight">
           Newspaper Room
         </h1>
-        <p className="font-body text-base text-mba-ink-soft mt-2 max-w-2xl">
-          Daily indexing of top 8 national epapers and international editorial briefs. High-resolution PDF reading room with 10-day archive.
+        <p className="font-body text-base text-[#475569] mt-2 max-w-2xl leading-relaxed">
+          Your daily reading desk — eight essential national editions and international briefs, curated in one place.
         </p>
       </header>
 
-      {/* 8 Target Cards Grid */}
-      <section className="mb-12">
+      {/* TODAY 8-CARD GRID */}
+      <section className="mb-14">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="font-display text-2xl text-mba-ink font-medium flex items-center gap-2">
-            <FileText className="w-5 h-5 text-mba-accent" />
-            Editions for {selectedDate}
+          <h2 className="font-display text-2xl font-medium text-[#0F172A] flex items-center gap-2">
+            <FileText className="w-5 h-5 text-amber-700" />
+            Today's Editions ({formatDateLabel(data?.todayDate)})
           </h2>
-          {availableDates.length > 0 && selectedDate === availableDates[0] && (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-mono text-xs uppercase tracking-wider">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> Live Today
-            </span>
-          )}
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-300 font-mono text-xs font-semibold">
+            <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" /> Live Today
+          </span>
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {TARGET_SLUGS.map((slug) => (
-              <div key={slug} className="h-44 bg-mba-surface-sunk border border-mba-rule rounded-lg animate-pulse p-4" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+            {TARGET_SLUGS.map((s) => (
+              <div key={s} className="h-44 bg-[#F1ECE4] border border-[#E2DDD5] rounded-lg animate-pulse p-4" />
             ))}
           </div>
         ) : error ? (
-          <div className="p-6 bg-red-50 border border-red-200 rounded-lg text-red-700 font-body">
+          <div className="p-5 bg-rose-50 border border-rose-200 rounded-lg text-rose-800 font-body text-sm">
             {error}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {newspapers.map((paper) => {
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+            {data?.todayNewspapers.map((paper) => {
               const isAvailable = paper.status === 'ready' && Boolean(paper.fileUrl);
               const fileSizeMB = paper.fileSize ? (paper.fileSize / (1024 * 1024)).toFixed(1) + ' MB' : '';
 
               return (
                 <div
                   key={paper.slug}
-                  className={`paper-card flex flex-col justify-between p-5 bg-white border rounded-lg transition-all duration-200 ${
+                  className={`paper-tile flex flex-col justify-between p-5 bg-white border rounded-xl transition-all duration-200 ${
                     isAvailable
-                      ? 'border-mba-rule hover:border-mba-accent hover:shadow-md'
-                      : 'border-mba-rule/60 opacity-75 bg-slate-50/50'
+                      ? 'border-[#E2DDD5] shadow-xs hover:border-[#0F172A] hover:shadow-md'
+                      : 'border-slate-200 opacity-70 bg-slate-50'
                   }`}
                 >
                   <div>
-                    {/* Badge / Status */}
                     <div className="flex items-center justify-between mb-3">
-                      <span className="font-mono text-[10px] uppercase tracking-wider px-2 py-0.5 rounded bg-sky-50 text-sky-700 border border-sky-200">
-                        {paper.edition && paper.edition !== 'none' ? `${paper.edition} Edition` : 'National'}
+                      <span className="font-mono text-[10px] uppercase font-semibold tracking-wider px-2.5 py-0.5 rounded bg-amber-50 text-amber-900 border border-amber-200">
+                        {paper.edition && paper.edition !== 'none' ? `${paper.edition} EDITION` : 'NATIONAL'}
                       </span>
                       {isAvailable ? (
-                        <span className="flex items-center text-xs text-emerald-600 font-mono gap-1">
+                        <span className="flex items-center text-xs text-emerald-700 font-mono font-medium gap-1">
                           <CheckCircle2 size={13} /> Available
                         </span>
                       ) : (
                         <span className="flex items-center text-xs text-slate-400 font-mono gap-1">
-                          <XCircle size={13} /> Not Available
+                          <XCircle size={13} /> Pending
                         </span>
                       )}
                     </div>
 
-                    {/* Title */}
-                    <h3 className="font-display text-lg text-mba-ink font-semibold leading-tight mb-2">
+                    <h3 className="font-display text-lg text-[#0F172A] font-semibold leading-snug mb-1">
                       {paper.displayName}
                     </h3>
                   </div>
 
-                  <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
-                    <span className="font-mono text-xs text-slate-400">
+                  <div className="mt-5 pt-3 border-t border-[#F1ECE4] flex items-center justify-between">
+                    <span className="font-mono text-xs text-[#64748B] font-medium">
                       {fileSizeMB ? fileSizeMB : 'PDF'}
                     </span>
 
                     {isAvailable ? (
                       <Link
                         href={`/newspaper/${paper.publicationDate}/${paper.slug}`}
-                        className="read-action-btn inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-mono font-medium text-white bg-mba-accent hover:bg-slate-800 transition-colors"
+                        className="read-action-btn inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-mono font-semibold text-white bg-[#0F172A] hover:bg-slate-800 transition-colors shadow-xs"
                       >
-                        READ <ArrowRight size={12} />
+                        Read Edition <ArrowRight size={13} />
                       </Link>
                     ) : (
-                      <span className="text-xs font-mono text-slate-400 italic">No File</span>
+                      <span className="text-xs font-mono text-slate-400 italic">Not ready</span>
                     )}
                   </div>
                 </div>
@@ -169,42 +222,166 @@ export default function NewspaperPage() {
         )}
       </section>
 
-      {/* Past 10 Days Archive UI */}
-      <section className="mt-12 pt-8 border-t border-mba-rule">
-        <div className="flex items-center gap-2 mb-4">
-          <Clock className="w-5 h-5 text-mba-accent" />
-          <h2 className="font-display text-2xl text-mba-ink font-medium">Past 10 Days Archive</h2>
-        </div>
-        <p className="font-body text-sm text-mba-ink-soft mb-6">
-          Select a publication date below to browse historical newspaper editions retained in the 10-day rolling archive.
-        </p>
+      {/* ─── SECTION 2: PREVIOUS EDITION (YESTERDAY) ───────────────────── */}
+      {data?.previousDate && data?.previousNewspapers.length > 0 && (
+        <section className="mb-14 pt-8 border-t border-[#E2DDD5]">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <span className="font-mono text-xs uppercase tracking-widest text-[#64748B] font-semibold block mb-1">
+                YESTERDAY &bull; {formatDateLabel(data.previousDate)}
+              </span>
+              <h2 className="font-display text-2xl font-medium text-[#0F172A]">
+                Previous Edition
+              </h2>
+            </div>
+            <span className="inline-flex items-center gap-1 px-3 py-1 rounded bg-slate-100 text-slate-700 font-mono text-xs font-semibold border border-slate-300">
+              STORED
+            </span>
+          </div>
 
-        <div className="flex flex-wrap gap-2">
-          {availableDates.map((date) => {
-            const isSelected = date === selectedDate;
-            const dateObj = new Date(date);
-            const dateDisplay = dateObj.toLocaleDateString('en-IN', {
-              day: 'numeric',
-              month: 'short',
-            });
-            const dayName = dateObj.toLocaleDateString('en-IN', { weekday: 'short' });
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+            {data.previousNewspapers.map((paper) => {
+              const isAvailable = paper.status === 'ready' && Boolean(paper.fileUrl);
+              const fileSizeMB = paper.fileSize ? (paper.fileSize / (1024 * 1024)).toFixed(1) + ' MB' : '';
 
-            return (
-              <button
-                key={date}
-                onClick={() => setSelectedDate(date)}
-                className={`archive-date-btn px-4 py-2 rounded-md font-mono text-xs flex flex-col items-center border transition-all ${
-                  isSelected
-                    ? 'bg-mba-accent text-white border-mba-accent shadow-sm'
-                    : 'bg-white text-mba-ink border-mba-rule hover:border-mba-ink-faint hover:bg-slate-50'
-                }`}
-              >
-                <span className="font-bold text-sm">{dateDisplay}</span>
-                <span className="opacity-80 uppercase text-[10px]">{dayName}</span>
-              </button>
-            );
-          })}
+              return (
+                <div
+                  key={paper.slug}
+                  className={`paper-tile flex flex-col justify-between p-5 bg-white border rounded-xl transition-all duration-200 ${
+                    isAvailable
+                      ? 'border-[#E2DDD5] hover:border-[#0F172A] hover:shadow-md'
+                      : 'border-slate-200 opacity-60 bg-slate-50'
+                  }`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="font-mono text-[10px] uppercase font-semibold tracking-wider px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">
+                        {paper.edition && paper.edition !== 'none' ? `${paper.edition}` : 'NATIONAL'}
+                      </span>
+                      <span className="flex items-center text-xs text-emerald-700 font-mono font-medium gap-1">
+                        <CheckCircle2 size={13} /> Stored
+                      </span>
+                    </div>
+
+                    <h3 className="font-display text-lg text-[#0F172A] font-semibold leading-snug mb-1">
+                      {paper.displayName}
+                    </h3>
+                  </div>
+
+                  <div className="mt-5 pt-3 border-t border-[#F1ECE4] flex items-center justify-between">
+                    <span className="font-mono text-xs text-[#64748B]">
+                      {fileSizeMB ? fileSizeMB : 'PDF'}
+                    </span>
+
+                    {isAvailable ? (
+                      <Link
+                        href={`/newspaper/${paper.publicationDate}/${paper.slug}`}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-mono font-medium text-[#0F172A] bg-slate-100 hover:bg-slate-200 transition-colors border border-slate-300"
+                      >
+                        Read <ArrowRight size={12} />
+                      </Link>
+                    ) : (
+                      <span className="text-xs font-mono text-slate-400 italic">No file</span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* ─── SECTION 3: LOOKING FOR AN OLDER EDITION? ───────────────────── */}
+      <section className="mt-14 pt-8 border-t border-[#E2DDD5]">
+        <div className="mb-6">
+          <div className="flex items-center gap-2 mb-2">
+            <Sparkles className="w-4 h-4 text-amber-700" />
+            <h2 className="font-display text-2xl font-medium text-[#0F172A]">
+              LOOKING FOR AN OLDER EDITION?
+            </h2>
+          </div>
+          <p className="font-body text-sm text-[#475569] max-w-xl">
+            Older editions aren't stored permanently. Fetch one from the source when you need it.
+          </p>
         </div>
+
+        {/* Polished Date Picker Control */}
+        <div className="bg-white border border-[#CBD5E1] p-4 rounded-xl mb-8 flex flex-wrap items-center justify-between gap-4 shadow-xs">
+          <div className="flex items-center gap-3">
+            <CalendarIcon className="w-5 h-5 text-[#0F172A]" />
+            <label htmlFor="older-date-select" className="font-mono text-xs uppercase font-bold text-[#1E293B]">
+              Select Publication Date:
+            </label>
+          </div>
+
+          <input
+            id="older-date-select"
+            type="date"
+            value={olderDate}
+            max={new Date().toISOString().substring(0, 10)}
+            onChange={(e) => setOlderDate(e.target.value)}
+            className="font-mono text-sm font-semibold text-[#1E293B] bg-[#F8FAFC] border border-[#94A3B8] rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#0F172A] hover:bg-slate-100 transition-colors cursor-pointer"
+          />
+        </div>
+
+        {/* Older Date Candidates Grid */}
+        {olderLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+            {TARGET_SLUGS.map((s) => (
+              <div key={s} className="h-40 bg-[#F1ECE4] border border-[#E2DDD5] rounded-xl animate-pulse p-4" />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+            {olderCards.map((paper) => {
+              const isFetching = fetchingSlug === paper.slug;
+
+              return (
+                <div
+                  key={paper.slug}
+                  className="paper-tile flex flex-col justify-between p-5 bg-white border border-[#E2DDD5] rounded-xl hover:border-amber-700 transition-all shadow-xs"
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="font-mono text-[10px] uppercase font-semibold tracking-wider px-2 py-0.5 rounded bg-sky-50 text-sky-900 border border-sky-200">
+                        Source Stream
+                      </span>
+                      <span className="flex items-center text-[11px] text-slate-500 font-mono">
+                        Available from source
+                      </span>
+                    </div>
+
+                    <h3 className="font-display text-lg text-[#0F172A] font-semibold leading-snug mb-1">
+                      {paper.displayName}
+                    </h3>
+                  </div>
+
+                  <div className="mt-5 pt-3 border-t border-[#F1ECE4] flex items-center justify-between">
+                    <span className="font-mono text-xs text-[#64748B]">
+                      On-demand
+                    </span>
+
+                    <button
+                      onClick={() => handleFetchAndRead(paper.slug, olderDate)}
+                      disabled={isFetching}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-mono font-semibold text-white bg-amber-700 hover:bg-amber-800 disabled:opacity-50 transition-colors shadow-xs"
+                    >
+                      {isFetching ? (
+                        <>
+                          <Loader2 size={13} className="animate-spin" /> Retrieving…
+                        </>
+                      ) : (
+                        <>
+                          Fetch & Read <ArrowRight size={13} />
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </section>
     </div>
   );

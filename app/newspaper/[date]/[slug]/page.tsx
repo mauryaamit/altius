@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, ExternalLink, Maximize2, ZoomIn, ZoomOut, RotateCcw, AlertTriangle } from 'lucide-react';
+import { useParams, useSearchParams } from 'next/navigation';
+import { ArrowLeft, Maximize2, ZoomIn, ZoomOut, RotateCcw, AlertTriangle } from 'lucide-react';
 
 interface NewspaperDetail {
   slug: string;
@@ -11,17 +11,19 @@ interface NewspaperDetail {
   category: string;
   publicationDate: string;
   edition: string;
-  status: 'ready' | 'not_available';
+  status: string;
   fileUrl: string | null;
   fileSize: number;
+  isStored?: boolean;
 }
 
 export default function PDFReaderPage() {
   const params = useParams();
-  const router = useRouter();
+  const searchParams = useSearchParams();
 
   const dateParam = params?.date as string;
   const slugParam = params?.slug as string;
+  const isOndemand = searchParams?.get('mode') === 'ondemand';
 
   const [paper, setPaper] = useState<NewspaperDetail | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -32,26 +34,46 @@ export default function PDFReaderPage() {
     if (dateParam && slugParam) {
       fetchPaperDetail();
     }
-  }, [dateParam, slugParam]);
+  }, [dateParam, slugParam, isOndemand]);
 
   const fetchPaperDetail = async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/newspaper?date=${dateParam}`);
-      const data = await res.json();
-      if (data.success && data.newspapers) {
-        const found = data.newspapers.find((p: any) => p.slug === slugParam);
-        if (found && found.status === 'ready' && found.fileUrl) {
-          setPaper(found);
-        } else {
-          setError(`The requested edition (${slugParam}) is not available for ${dateParam}.`);
-        }
+      if (isOndemand) {
+        // Stream directly via ondemand route
+        const ondemandUrl = `/api/newspaper/ondemand?date=${dateParam}&slug=${slugParam}`;
+        setPaper({
+          slug: slugParam,
+          displayName: slugParam.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+          category: slugParam,
+          publicationDate: dateParam,
+          edition: 'Source Stream',
+          status: 'ready_ondemand',
+          fileUrl: ondemandUrl,
+          fileSize: 0,
+          isStored: false,
+        });
       } else {
-        setError('Failed to load newspaper details.');
+        // Fetch metadata from stored API
+        const res = await fetch(`/api/newspaper?date=${dateParam}`);
+        const data = await res.json();
+        if (data.success && data.newspapers) {
+          const found = data.newspapers.find((p: any) => p.slug === slugParam);
+          if (found && found.fileUrl) {
+            setPaper({
+              ...found,
+              isStored: data.isStored !== false,
+            });
+          } else {
+            setError(`The requested edition is not available for ${dateParam}.`);
+          }
+        } else {
+          setError('Unable to load newspaper details.');
+        }
       }
-    } catch (err: any) {
-      setError('Network error fetching document.');
+    } catch {
+      setError("Couldn't retrieve this edition right now. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -83,10 +105,21 @@ export default function PDFReaderPage() {
           </Link>
           {paper && (
             <div>
-              <h1 className="font-display text-lg text-white font-semibold leading-tight">
-                {paper.displayName}
-              </h1>
-              <p className="font-mono text-xs text-slate-400">
+              <div className="flex items-center gap-2">
+                <h1 className="font-display text-lg text-white font-semibold leading-tight">
+                  {paper.displayName}
+                </h1>
+                {isOndemand ? (
+                  <span className="font-mono text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                    ON-DEMAND EDITION
+                  </span>
+                ) : (
+                  <span className="font-mono text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    STORED EDITION
+                  </span>
+                )}
+              </div>
+              <p className="font-mono text-xs text-slate-400 mt-0.5">
                 {formattedDate} &bull; <span className="uppercase text-sky-400">{paper.edition} edition</span>
               </p>
             </div>
@@ -95,7 +128,6 @@ export default function PDFReaderPage() {
 
         {paper && paper.fileUrl && (
           <div className="flex items-center gap-2">
-            {/* Zoom Controls */}
             <div className="flex items-center bg-slate-800 rounded p-1 text-slate-300">
               <button
                 onClick={handleZoomOut}
@@ -121,7 +153,6 @@ export default function PDFReaderPage() {
               </button>
             </div>
 
-            {/* External Open / Direct Link */}
             <a
               href={paper.fileUrl}
               target="_blank"
@@ -139,8 +170,8 @@ export default function PDFReaderPage() {
       <main className="flex-1 flex flex-col items-center justify-center p-2 bg-slate-900 overflow-auto">
         {loading ? (
           <div className="flex flex-col items-center justify-center p-12 text-slate-400 font-mono text-sm gap-3">
-            <div className="w-8 h-8 border-2 border-sky-500 border-t-transparent rounded-full animate-spin" />
-            Loading PDF reader stream...
+            <div className="w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+            {isOndemand ? 'Retrieving edition from Telegram source…' : 'Loading stored PDF reader stream…'}
           </div>
         ) : error || !paper || !paper.fileUrl ? (
           <div className="max-w-md p-6 bg-slate-950 border border-slate-800 rounded-lg text-center my-12">
