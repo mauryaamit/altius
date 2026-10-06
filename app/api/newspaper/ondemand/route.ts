@@ -5,7 +5,15 @@ import { classifyDocument, TARGET_NEWSPAPER_SLUGS } from '@/lib/telegram/classif
 
 export const dynamic = 'force-dynamic';
 
+export async function HEAD(request: NextRequest) {
+  return handleOndemandRequest(request, true);
+}
+
 export async function GET(request: NextRequest) {
+  return handleOndemandRequest(request, false);
+}
+
+async function handleOndemandRequest(request: NextRequest, isHeadOnly: boolean) {
   let client: TelegramClient | null = null;
 
   try {
@@ -99,6 +107,17 @@ export async function GET(request: NextRequest) {
         { success: false, error: 'That edition could not be found in the source channel.' },
         { status: 404 }
       );
+    }
+
+    if (isHeadOnly) {
+      await client.disconnect();
+      return new NextResponse(null, {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/pdf',
+          'Content-Length': (bestCandidate.doc.size || 0).toString(),
+        },
+      });
     }
 
     // 5. Download Stream Buffer & Disconnect

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Maximize2, ZoomIn, ZoomOut, RotateCcw, AlertTriangle } from 'lucide-react';
+import { formatDateLong } from '@/lib/telegram/date-utils';
 
 interface NewspaperDetail {
   slug: string;
@@ -41,11 +42,25 @@ export default function PDFReaderPage() {
     setError(null);
     try {
       if (isOndemand) {
-        // Stream directly via ondemand route
         const ondemandUrl = `/api/newspaper/ondemand?date=${dateParam}&slug=${slugParam}`;
+
+        // Preflight check to catch 503 / 404 / 500 errors before rendering iframe
+        const headRes = await fetch(ondemandUrl, { method: 'HEAD' });
+
+        if (!headRes.ok) {
+          if (headRes.status === 503) {
+            setError('Telegram connection is temporarily unconfigured on server.');
+          } else if (headRes.status === 404) {
+            setError('That edition could not be found in the source channel.');
+          } else {
+            setError("Couldn't retrieve this edition right now. Please try again.");
+          }
+          return;
+        }
+
         setPaper({
           slug: slugParam,
-          displayName: slugParam.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+          displayName: slugParam.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
           category: slugParam,
           publicationDate: dateParam,
           edition: 'Source Stream',
@@ -83,14 +98,7 @@ export default function PDFReaderPage() {
   const handleZoomOut = () => setZoom((prev) => Math.max(prev - 20, 60));
   const handleZoomReset = () => setZoom(100);
 
-  const formattedDate = dateParam
-    ? new Date(dateParam).toLocaleDateString('en-IN', {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-      })
-    : dateParam;
+  const formattedDisplayDate = formatDateLong(dateParam);
 
   return (
     <div className="pdf-reader-root min-h-screen flex flex-col bg-slate-900 text-white">
@@ -101,7 +109,7 @@ export default function PDFReaderPage() {
             href="/newspaper"
             className="flex items-center gap-1.5 text-xs font-mono text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded transition-colors"
           >
-            <ArrowLeft size={14} /> Back to Room
+            <ArrowLeft size={14} /> Back to Newspaper Room
           </Link>
           {paper && (
             <div>
@@ -120,13 +128,13 @@ export default function PDFReaderPage() {
                 )}
               </div>
               <p className="font-mono text-xs text-slate-400 mt-0.5">
-                {formattedDate} &bull; <span className="uppercase text-sky-400">{paper.edition} edition</span>
+                {formattedDisplayDate} &bull; <span className="uppercase text-sky-400">{paper.edition} edition</span>
               </p>
             </div>
           )}
         </div>
 
-        {paper && paper.fileUrl && (
+        {paper && paper.fileUrl && !error && (
           <div className="flex items-center gap-2">
             <div className="flex items-center bg-slate-800 rounded p-1 text-slate-300">
               <button
@@ -167,20 +175,29 @@ export default function PDFReaderPage() {
       </header>
 
       {/* Main Reader Viewport */}
-      <main className="flex-1 flex flex-col items-center justify-center p-2 bg-slate-900 overflow-auto">
+      <main className="flex-1 flex flex-col items-center justify-center p-4 bg-slate-900 overflow-auto">
         {loading ? (
-          <div className="flex flex-col items-center justify-center p-12 text-slate-400 font-mono text-sm gap-3">
-            <div className="w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
-            {isOndemand ? 'Retrieving edition from Telegram source…' : 'Loading stored PDF reader stream…'}
+          <div className="flex flex-col items-center justify-center p-12 text-slate-300 font-mono text-sm gap-4 bg-slate-950/80 rounded-xl border border-slate-800 max-w-md text-center">
+            <div className="w-9 h-9 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+            <div>
+              <p className="font-bold text-white mb-1">
+                {isOndemand ? 'Fetching edition from Telegram source…' : 'Loading stored PDF reader stream…'}
+              </p>
+              <p className="text-xs text-slate-400 font-body">
+                Please wait while we prepare the high-resolution edition.
+              </p>
+            </div>
           </div>
         ) : error || !paper || !paper.fileUrl ? (
-          <div className="max-w-md p-6 bg-slate-950 border border-slate-800 rounded-lg text-center my-12">
-            <AlertTriangle className="w-10 h-10 text-amber-500 mx-auto mb-3" />
-            <h2 className="font-display text-lg text-white font-medium mb-2">Edition Not Available</h2>
-            <p className="font-body text-xs text-slate-400 mb-6">{error || 'Unable to display PDF'}</p>
+          <div className="max-w-md p-8 bg-slate-950 border border-slate-800 rounded-xl text-center my-12 shadow-2xl">
+            <AlertTriangle className="w-12 h-12 text-amber-500 mx-auto mb-4" />
+            <h2 className="font-display text-xl text-white font-semibold mb-2">Unable to retrieve this edition</h2>
+            <p className="font-body text-sm text-slate-400 mb-6 leading-relaxed">
+              {error || "We couldn't retrieve this newspaper from the source right now."}
+            </p>
             <Link
               href="/newspaper"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded bg-sky-600 hover:bg-sky-500 text-white font-mono text-xs font-medium transition-colors"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-mono text-xs font-semibold transition-colors shadow-sm"
             >
               <ArrowLeft size={14} /> Return to Newspaper Room
             </Link>
