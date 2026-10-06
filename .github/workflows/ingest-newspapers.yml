@@ -11,6 +11,12 @@ on:
     # 21:00 IST = 15:30 UTC
     - cron: '30 0,3,6,9,12,15 * * *'
   workflow_dispatch:
+    inputs:
+      publication_date:
+        description: 'Optional Publication Date for manual backfill (YYYY-MM-DD)'
+        required: false
+        default: ''
+        type: string
 
 # Prevent overlapping ingestion runs
 concurrency:
@@ -49,4 +55,9 @@ jobs:
           FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
           FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
           NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ${{ secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}
-        run: npx tsx scripts/ingest-newspapers.mjs
+        run: |
+          if [ -n "${{ inputs.publication_date }}" ]; then
+            npx tsx scripts/ingest-newspapers.mjs --date=${{ inputs.publication_date }}
+          else
+            npx tsx scripts/ingest-newspapers.mjs
+          fi

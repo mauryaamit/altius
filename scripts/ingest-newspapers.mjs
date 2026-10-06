@@ -178,18 +178,24 @@ async function runIngestionPipeline() {
   const day = String(nowIST.getDate()).padStart(2, '0');
   const todayStr = `${year}-${month}-${day}`;
 
+  // Parse optional --date=YYYY-MM-DD from command-line arguments (for manual backfills)
+  const dateArg = process.argv.find(arg => arg.startsWith('--date='))?.split('=')[1] ||
+                  (process.argv.indexOf('--date') !== -1 ? process.argv[process.argv.indexOf('--date') + 1] : null);
+
+  const targetDateStr = dateArg || todayStr;
+
   const currentHour = nowIST.getHours();
   const timeLabel = `${String(currentHour).padStart(2, '0')}:00 IST`;
 
   console.log('\n======================================================');
   console.log('   ALTIUS NEWSPAPER INGESTION WORKER (Zero-Cost Storage)');
-  console.log(`   Date: ${todayStr}`);
-  console.log(`   Time: ${timeLabel}`);
+  console.log(`   Target Publication Date: ${targetDateStr}${dateArg ? ' [MANUAL BACKFILL MODE]' : ' [SCHEDULED MODE]'}`);
+  console.log(`   Execution Time: ${timeLabel}`);
   console.log('======================================================\n');
 
-  // Query Firestore for Today's Ingestion Status
+  // Query Firestore for Target Date Ingestion Status
   const todayDocsSnap = await db.collection('newspapers')
-    .where('publicationDate', '==', todayStr)
+    .where('publicationDate', '==', targetDateStr)
     .get();
 
   const statusMap = new Map();
@@ -310,7 +316,7 @@ async function runIngestionPipeline() {
     const classified = classifyDocument(filename, msgDateIso);
 
     if (!classified.shouldRetain) continue;
-    if (classified.inferredDate !== todayStr) continue;
+    if (classified.inferredDate !== targetDateStr) continue;
 
     const slug = classified.slug;
     const isMissing = missingSlugs.includes(slug);
@@ -349,7 +355,7 @@ async function runIngestionPipeline() {
     console.log(`⬇️ Ingesting [${slug}]: ${filename} (${(doc.size / (1024 * 1024)).toFixed(2)} MB)...`);
 
     await docRef.set({
-      publicationDate: todayStr,
+      publicationDate: targetDateStr,
       slug,
       displayName: classified.displayName,
       category: classified.category,
@@ -365,10 +371,10 @@ async function runIngestionPipeline() {
       }
 
       // Store PDF Asset using zero-cost GitHub Releases CDN storage
-      const assetRes = await storePdfAsset(todayStr, slug, filename, buffer);
+      const assetRes = await storePdfAsset(targetDateStr, slug, filename, buffer);
 
       const metadata = {
-        publicationDate: todayStr,
+        publicationDate: targetDateStr,
         category: classified.category,
         slug,
         displayName: classified.displayName,
@@ -409,7 +415,7 @@ async function runIngestionPipeline() {
 
   console.log('\n======================================================');
   console.log('   ALTIUS NEWSPAPER INGESTION SUMMARY');
-  console.log(`   Date: ${todayStr} | Time: ${timeLabel}`);
+  console.log(`   Date: ${targetDateStr} | Time: ${timeLabel}`);
   console.log('------------------------------------------------------');
   console.log(`Already Complete (${readySlugs.size - newlyDownloadedCount}/8)`);
   console.log(`Newly Downloaded (${newlyDownloadedCount}/8): ${newlyDownloadedSlugs.map(s => DISPLAY_NAMES[s]).join(', ') || 'None'}`);
