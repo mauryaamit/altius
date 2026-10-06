@@ -35,9 +35,6 @@ export function getAdminDb() {
 }
 
 export function getAdminStorageBucket() {
-  if (adminStorageInstance) return adminStorageInstance.bucket();
-  ensureFirebaseAdminApp();
-  adminStorageInstance = getStorage();
-  const bucketName = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || 'altius-436b0.firebasestorage.app';
-  return adminStorageInstance.bucket(bucketName);
+  return null;
 }
+

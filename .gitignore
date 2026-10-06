@@ -46,3 +46,7 @@ next-env.d.ts
 *.session-journal
 .telegram-session*
 
+# firebase credential keys
+*-firebase-adminsdk-*.json
+
+

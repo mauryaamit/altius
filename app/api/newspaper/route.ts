@@ -67,20 +67,8 @@ export async function GET(request: NextRequest) {
           };
         }
 
-        // Generate signed URL valid for 24 hours
-        let fileUrl = null;
-        if (doc.storagePath) {
-          try {
-            const [url] = await bucket.file(doc.storagePath).getSignedUrl({
-              action: 'read',
-              expires: Date.now() + 24 * 60 * 60 * 1000,
-            });
-            fileUrl = url;
-          } catch (e) {
-            // Fallback to public storage URL
-            fileUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(doc.storagePath)}?alt=media`;
-          }
-        }
+        const rawFileUrl = doc.fileUrl || doc.downloadUrl;
+        const fileUrl = rawFileUrl ? `/api/newspaper/file?url=${encodeURIComponent(rawFileUrl)}` : `/api/newspaper/file?date=${activeDate}&slug=${slug}`;
 
         return {
           slug: doc.slug || slug,

@@ -136,29 +136,53 @@ export function classifyDocument(filename: string, messageDateIso: string): Clas
     return buildResult(true, 'hindi-editorial', 'Hindi Editorial', 'Hindi Editorial', 'national', 1, 'Target: Hindi Editorial');
   }
 
+  // Helper to determine edition priority (Mumbai P1 -> Delhi P2 -> Main/National P2 -> Regional P3)
+  const getEditionInfo = (str: string) => {
+    if (str.includes('mumbai')) return { edition: 'mumbai', priority: 1 };
+    if (str.includes('delhi')) return { edition: 'delhi', priority: 2 };
+    return { edition: 'main', priority: 2 };
+  };
+
+  // Common exclusion check for supplements, city pull-outs, and school editions
+  const isSupplementOrSubEdition =
+    lower.includes('school') ||
+    lower.includes('city') ||
+    lower.includes('supplement') ||
+    lower.includes('epaper city');
+
   // 5. The Hindu (Exclude HT / Tamil / Hindi translations)
   if ((lower.includes('hindu') || lower.startsWith('th ')) && !lower.includes('hindustan') && !lower.includes('tamil')) {
-    return buildResult(true, 'the-hindu', 'The Hindu', 'The Hindu', lower.includes('mumbai') ? 'mumbai' : 'delhi', 1, 'Target: The Hindu');
+    if (isSupplementOrSubEdition) return buildResult(false, 'the-hindu', 'The Hindu', 'The Hindu', 'sub-edition', 99, 'Excluded Hindu sub-edition/supplement');
+    const { edition, priority } = getEditionInfo(lower);
+    return buildResult(true, 'the-hindu', 'The Hindu', 'The Hindu', edition, priority, `Target: The Hindu (${edition})`);
   }
 
   // 6. The Indian Express (Exclude NIE)
   if (lower.startsWith('ie-') || lower.startsWith('ie ') || lower.includes('indian express')) {
-    return buildResult(true, 'indian-express', 'The Indian Express', 'The Indian Express', lower.includes('mumbai') ? 'mumbai' : 'delhi', 1, 'Target: The Indian Express');
+    if (isSupplementOrSubEdition) return buildResult(false, 'indian-express', 'The Indian Express', 'The Indian Express', 'sub-edition', 99, 'Excluded IE sub-edition/supplement');
+    const { edition, priority } = getEditionInfo(lower);
+    return buildResult(true, 'indian-express', 'The Indian Express', 'The Indian Express', edition, priority, `Target: The Indian Express (${edition})`);
   }
 
   // 7. Mint
   if (lower.includes('mint')) {
-    return buildResult(true, 'mint', 'Mint', 'Mint', lower.includes('mumbai') ? 'mumbai' : 'delhi', 1, 'Target: Mint');
+    if (isSupplementOrSubEdition) return buildResult(false, 'mint', 'Mint', 'Mint', 'sub-edition', 99, 'Excluded Mint sub-edition/supplement');
+    const { edition, priority } = getEditionInfo(lower);
+    return buildResult(true, 'mint', 'Mint', 'Mint', edition, priority, `Target: Mint (${edition})`);
   }
 
   // 8. Economic Times
   if (lower.startsWith('et-') || lower.startsWith('et ') || lower.includes('economic times')) {
-    return buildResult(true, 'economic-times', 'Economic Times', 'Economic Times', lower.includes('mumbai') ? 'mumbai' : 'delhi', 1, 'Target: Economic Times');
+    if (isSupplementOrSubEdition) return buildResult(false, 'economic-times', 'Economic Times', 'Economic Times', 'sub-edition', 99, 'Excluded ET sub-edition/supplement');
+    const { edition, priority } = getEditionInfo(lower);
+    return buildResult(true, 'economic-times', 'Economic Times', 'Economic Times', edition, priority, `Target: Economic Times (${edition})`);
   }
 
   // 9. Times of India
   if (lower.startsWith('toi-') || lower.startsWith('toi ') || lower.includes('times of india')) {
-    return buildResult(true, 'times-of-india', 'Times of India', 'Times of India', lower.includes('mumbai') ? 'mumbai' : 'delhi', 1, 'Target: Times of India');
+    if (isSupplementOrSubEdition) return buildResult(false, 'times-of-india', 'Times of India', 'Times of India', 'sub-edition', 99, 'Excluded TOI sub-edition/supplement');
+    const { edition, priority } = getEditionInfo(lower);
+    return buildResult(true, 'times-of-india', 'Times of India', 'Times of India', edition, priority, `Target: Times of India (${edition})`);
   }
 
   // 10. Hindustan Times (Strict Priority: Mumbai P1 -> Delhi Main P2)

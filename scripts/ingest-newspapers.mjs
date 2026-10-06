@@ -1,11 +1,10 @@
-import { readFileSync, existsSync } from 'fs';
+import { readFileSync, existsSync, mkdirSync, writeFileSync } from 'fs';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { TelegramClient } from 'telegram';
 import { StringSession } from 'telegram/sessions/index.js';
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
-import { getStorage } from 'firebase-admin/storage';
 import { classifyDocument, TARGET_NEWSPAPER_SLUGS } from '../lib/telegram/classifier.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -25,12 +24,11 @@ if (existsSync(envPath)) {
   }
 }
 
-// 2. Initialize Firebase Admin
+// 2. Initialize Firebase Admin (Firestore only, no bucket requirement)
 if (!getApps().length) {
   const projectId = process.env.FIREBASE_PROJECT_ID || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
   const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
   const privateKey = process.env.FIREBASE_PRIVATE_KEY;
-  const storageBucket = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || 'altius-436b0.firebasestorage.app';
 
   if (!projectId || !clientEmail || !privateKey) {
     console.error('❌ Firebase Admin credentials missing in environment variables.');
@@ -43,12 +41,10 @@ if (!getApps().length) {
       clientEmail,
       privateKey: privateKey.replace(/\\n/g, '\n'),
     }),
-    storageBucket,
   });
 }
 
 const db = getFirestore();
-const bucket = getStorage().bucket();
 
 const DISPLAY_NAMES = {
   'the-hindu': 'The Hindu',
@@ -61,8 +57,121 @@ const DISPLAY_NAMES = {
   'hindi-editorial': 'Hindi Editorial',
 };
 
+/**
+ * Upload PDF buffer to GitHub Release asset tag `epaper-YYYY-MM-DD`.
+ * Fallback to local file store if GITHUB_TOKEN is not provided.
+ */
+async function storePdfAsset(todayStr, slug, filename, buffer) {
+  const token = process.env.GITHUB_TOKEN;
+  const repoFull = process.env.GITHUB_REPOSITORY || 'mauryaamit/altius';
+
+  if (!token) {
+    console.log(`ℹ️ GITHUB_TOKEN not set. Storing ${slug}.pdf locally for dev environment...`);
+    const localDir = resolve(__dirname, '..', 'public', 'newspapers', todayStr);
+    if (!existsSync(localDir)) mkdirSync(localDir, { recursive: true });
+    const localFilePath = resolve(localDir, `${slug}.pdf`);
+    writeFileSync(localFilePath, buffer);
+    return {
+      fileUrl: `/newspapers/${todayStr}/${slug}.pdf`,
+      downloadUrl: `/newspapers/${todayStr}/${slug}.pdf`,
+      storageType: 'local',
+    };
+  }
+
+  const [owner, repo] = repoFull.split('/');
+  const tagName = `epaper-${todayStr}`;
+  const releaseName = `Altius Newspaper Archive - ${todayStr}`;
+  const headers = {
+    'Authorization': `Bearer ${token}`,
+    'Accept': 'application/vnd.github+json',
+    'User-Agent': 'Altius-Ingestion-Worker',
+  };
+
+  let uploadUrlTemplate = '';
+
+  const getRelRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/releases/tags/${tagName}`, { headers });
+  if (getRelRes.ok) {
+    const relData = await getRelRes.json();
+    uploadUrlTemplate = relData.upload_url;
+  } else {
+    const createRelRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/releases`, {
+      method: 'POST',
+      headers: { ...headers, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        tag_name: tagName,
+        name: releaseName,
+        body: `Automated daily epaper archive for ${todayStr}.`,
+        draft: false,
+        prerelease: false,
+      }),
+    });
+
+    if (!createRelRes.ok) {
+      const errText = await createRelRes.text();
+      throw new Error(`Failed to create GitHub Release ${tagName}: ${createRelRes.status} ${errText}`);
+    }
+
+    const relData = await createRelRes.json();
+    uploadUrlTemplate = relData.upload_url;
+  }
+
+  const assetName = `${slug}.pdf`;
+  const uploadUrl = uploadUrlTemplate.split('{')[0] + `?name=${encodeURIComponent(assetName)}`;
+
+  const uploadRes = await fetch(uploadUrl, {
+    method: 'POST',
+    headers: {
+      ...headers,
+      'Content-Type': 'application/pdf',
+      'Content-Length': buffer.length.toString(),
+    },
+    body: buffer,
+  });
+
+  if (!uploadRes.ok) {
+    const errText = await uploadRes.text();
+    if (uploadRes.status === 422 && errText.includes('already_exists')) {
+      const relRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/releases/tags/${tagName}`, { headers });
+      if (relRes.ok) {
+        const relData = await relRes.json();
+        const assetsRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/releases/${relData.id}/assets`, { headers });
+        if (assetsRes.ok) {
+          const assets = await assetsRes.json();
+          const existingAsset = assets.find(a => a.name === assetName);
+          if (existingAsset) {
+            await fetch(`https://api.github.com/repos/${owner}/${repo}/releases/assets/${existingAsset.id}`, {
+              method: 'DELETE',
+              headers,
+            });
+            const retryRes = await fetch(uploadUrl, {
+              method: 'POST',
+              headers: {
+                ...headers,
+                'Content-Type': 'application/pdf',
+                'Content-Length': buffer.length.toString(),
+              },
+              body: buffer,
+            });
+            if (retryRes.ok) {
+              const assetData = await retryRes.json();
+              return { fileUrl: assetData.browser_download_url, downloadUrl: assetData.browser_download_url, storageType: 'github-release' };
+            }
+          }
+        }
+      }
+    }
+    throw new Error(`Failed to upload asset to GitHub Release: ${uploadRes.status} ${errText}`);
+  }
+
+  const assetData = await uploadRes.json();
+  return {
+    fileUrl: assetData.browser_download_url,
+    downloadUrl: assetData.browser_download_url,
+    storageType: 'github-release',
+  };
+}
+
 async function runIngestionPipeline() {
-  // 3. Compute Current Date & Time in Asia/Kolkata (IST)
   const nowIST = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
   const year = nowIST.getFullYear();
   const month = String(nowIST.getMonth() + 1).padStart(2, '0');
@@ -73,17 +182,17 @@ async function runIngestionPipeline() {
   const timeLabel = `${String(currentHour).padStart(2, '0')}:00 IST`;
 
   console.log('\n======================================================');
-  console.log('   ALTIUS NEWSPAPER INGESTION WORKER');
+  console.log('   ALTIUS NEWSPAPER INGESTION WORKER (Zero-Cost Storage)');
   console.log(`   Date: ${todayStr}`);
   console.log(`   Time: ${timeLabel}`);
   console.log('======================================================\n');
 
-  // 4. Query Firestore for Today's Ingestion Status
+  // Query Firestore for Today's Ingestion Status
   const todayDocsSnap = await db.collection('newspapers')
     .where('publicationDate', '==', todayStr)
     .get();
 
-  const statusMap = new Map(); // slug -> docData
+  const statusMap = new Map();
   todayDocsSnap.docs.forEach(doc => {
     const data = doc.data();
     if (data.slug) {
@@ -101,8 +210,7 @@ async function runIngestionPipeline() {
         if (docData.edition === 'mumbai') {
           readySlugs.add(slug);
         } else {
-          // Stored as HT Delhi (Priority 2), check if HT Mumbai appears later
-          readySlugs.add(slug); // count as ready for now
+          readySlugs.add(slug);
           htNeedsUpgrade = true;
         }
       } else {
@@ -111,7 +219,7 @@ async function runIngestionPipeline() {
     }
   });
 
-  // 5. Early Completion Exit Check
+  // Early Completion Exit Check
   if (readySlugs.size === 8 && !htNeedsUpgrade) {
     console.log('======================================================');
     console.log('  PROGRESS: 8/8');
@@ -124,7 +232,7 @@ async function runIngestionPipeline() {
     process.exit(0);
   }
 
-  // 6. Identify Missing Categories & Priority Upgrade Needs
+  // Identify Missing Categories
   const missingSlugs = TARGET_NEWSPAPER_SLUGS.filter(s => !readySlugs.has(s) || (s === 'hindustan-times' && htNeedsUpgrade));
 
   console.log(`Already Completed (${readySlugs.size}/8):`);
@@ -141,7 +249,7 @@ async function runIngestionPipeline() {
   });
   console.log('');
 
-  // 7. Connect to Telegram MTProto Client
+  // Connect to Telegram MTProto Client
   const apiIdStr = process.env.TELEGRAM_API_ID;
   const apiHash = process.env.TELEGRAM_API_HASH;
   const sessionStr = process.env.TELEGRAM_SESSION;
@@ -181,8 +289,7 @@ async function runIngestionPipeline() {
   console.log('📥 Scanning recent Telegram channel messages...');
   const messages = await client.getMessages(targetDialog.entity, { limit: 250 });
 
-  // Group candidate files for missing slugs
-  const candidatesMap = new Map(); // slug -> item
+  const candidatesMap = new Map();
 
   for (const msg of messages) {
     if (!msg.media || !msg.media.document) continue;
@@ -203,16 +310,12 @@ async function runIngestionPipeline() {
     const classified = classifyDocument(filename, msgDateIso);
 
     if (!classified.shouldRetain) continue;
-
-    // Only process if it matches today's publication date
     if (classified.inferredDate !== todayStr) continue;
 
     const slug = classified.slug;
     const isMissing = missingSlugs.includes(slug);
-
     if (!isMissing) continue;
 
-    // Candidate handling for Hindustan Times upgrade or initial fill
     const existingCandidate = candidatesMap.get(slug);
     if (!existingCandidate || classified.priority < existingCandidate.classified.priority) {
       candidatesMap.set(slug, {
@@ -228,14 +331,13 @@ async function runIngestionPipeline() {
   let newlyDownloadedCount = 0;
   const newlyDownloadedSlugs = [];
 
-  // 8. Ingest Candidates
+  // Ingest Candidates
   for (const [slug, item] of candidatesMap.entries()) {
     const { msg, doc, filename, classified, msgDateIso } = item;
     const key = classified.uniquenessKey;
     const docRef = db.collection('newspapers').doc(key);
     const existingDocData = statusMap.get(slug);
 
-    // Skip if existing ready document has equal or higher priority
     if (existingDocData && existingDocData.status === 'ready') {
       const existingPriority = existingDocData.priority ?? 1;
       if (classified.priority >= existingPriority) {
@@ -246,7 +348,6 @@ async function runIngestionPipeline() {
 
     console.log(`⬇️ Ingesting [${slug}]: ${filename} (${(doc.size / (1024 * 1024)).toFixed(2)} MB)...`);
 
-    // Mark as processing in Firestore before download
     await docRef.set({
       publicationDate: todayStr,
       slug,
@@ -258,29 +359,14 @@ async function runIngestionPipeline() {
     }, { merge: true });
 
     try {
-      // Stream/Buffer Download
       const buffer = await client.downloadMedia(msg, {});
       if (!buffer) {
         throw new Error(`Media download returned empty buffer for ${filename}`);
       }
 
-      // Storage Upload: newspapers/YYYY-MM-DD/[slug].pdf
-      const storagePath = `newspapers/${todayStr}/${slug}.pdf`;
-      const fileRef = bucket.file(storagePath);
+      // Store PDF Asset using zero-cost GitHub Releases CDN storage
+      const assetRes = await storePdfAsset(todayStr, slug, filename, buffer);
 
-      await fileRef.save(buffer, {
-        metadata: {
-          contentType: 'application/pdf',
-          metadata: {
-            originalFilename: filename,
-            publicationDate: todayStr,
-            slug,
-            edition: classified.edition,
-          },
-        },
-      });
-
-      // Write Ready Metadata to Firestore
       const metadata = {
         publicationDate: todayStr,
         category: classified.category,
@@ -292,7 +378,9 @@ async function runIngestionPipeline() {
         telegramMessageId: msg.id.toString(),
         telegramChannelId: channelId,
         telegramMessageDate: msgDateIso,
-        storagePath,
+        fileUrl: assetRes.fileUrl,
+        downloadUrl: assetRes.downloadUrl,
+        storageType: assetRes.storageType,
         fileSize: doc.size,
         ingestedAt: new Date().toISOString(),
         source: 'telegram',
@@ -307,7 +395,6 @@ async function runIngestionPipeline() {
       readySlugs.add(slug);
     } catch (err) {
       console.error(`❌ Failed to ingest ${slug}:`, err.message);
-      // Mark as failed so retry happens on next 3-hour run
       await docRef.set({
         status: 'failed',
         error: err.message,
@@ -316,7 +403,6 @@ async function runIngestionPipeline() {
     }
   }
 
-  // Recalculate Final Progress for this run
   const finalReadyCount = readySlugs.size;
   const isFinalRun = currentHour >= 21;
   const overallStatus = finalReadyCount === 8 ? 'COMPLETE' : isFinalRun ? 'INCOMPLETE (Final Cutoff Passed)' : 'PARTIAL';
@@ -327,7 +413,7 @@ async function runIngestionPipeline() {
   console.log('------------------------------------------------------');
   console.log(`Already Complete (${readySlugs.size - newlyDownloadedCount}/8)`);
   console.log(`Newly Downloaded (${newlyDownloadedCount}/8): ${newlyDownloadedSlugs.map(s => DISPLAY_NAMES[s]).join(', ') || 'None'}`);
-  
+
   const stillMissing = TARGET_NEWSPAPER_SLUGS.filter(s => !readySlugs.has(s));
   console.log(`Still Missing (${stillMissing.length}/8): ${stillMissing.map(s => DISPLAY_NAMES[s]).join(', ') || 'None'}`);
 
@@ -339,7 +425,6 @@ async function runIngestionPipeline() {
   }
   console.log('======================================================\n');
 
-  // 9. Retention Cleanup
   await executeRetentionCleanup();
 
   await client.disconnect();
@@ -349,7 +434,7 @@ async function runIngestionPipeline() {
 /**
  * 10-Day Retention Cleanup
  * Keeps top 10 unique publication dates in descending order.
- * Deletes Storage files and Firestore docs older than 10 dates.
+ * Deletes GitHub Releases and Firestore docs older than 10 dates.
  */
 async function executeRetentionCleanup() {
   console.log('🧹 Running 10-Day Retention Cleanup...');
@@ -378,25 +463,41 @@ async function executeRetentionCleanup() {
   console.log(`   Pruning expired dates older than top 10: ${expiredDates.join(', ')}`);
 
   let prunedDocCount = 0;
-  let prunedStorageCount = 0;
+  const token = process.env.GITHUB_TOKEN;
+  const repoFull = process.env.GITHUB_REPOSITORY || 'mauryaamit/altius';
+  const [owner, repo] = repoFull.split('/');
+
+  for (const expDate of expiredDates) {
+    if (token) {
+      try {
+        const tagName = `epaper-${expDate}`;
+        const headers = {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/vnd.github+json',
+          'User-Agent': 'Altius-Ingestion-Worker',
+        };
+        const relRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/releases/tags/${tagName}`, { headers });
+        if (relRes.ok) {
+          const relData = await relRes.json();
+          await fetch(`https://api.github.com/repos/${owner}/${repo}/releases/${relData.id}`, { method: 'DELETE', headers });
+          await fetch(`https://api.github.com/repos/${owner}/${repo}/git/refs/tags/${tagName}`, { method: 'DELETE', headers });
+          console.log(`   Deleted GitHub Release ${tagName}`);
+        }
+      } catch (e) {
+        console.error(`   Warning deleting release for ${expDate}:`, e.message);
+      }
+    }
+  }
 
   for (const doc of snapshot.docs) {
     const data = doc.data();
     if (data.publicationDate && !allowedDates.has(data.publicationDate)) {
-      if (data.storagePath) {
-        try {
-          await bucket.file(data.storagePath).delete();
-          prunedStorageCount++;
-        } catch {
-          // ignore
-        }
-      }
       await doc.ref.delete();
       prunedDocCount++;
     }
   }
 
-  console.log(`✅ Cleaned up ${prunedDocCount} expired Firestore records & ${prunedStorageCount} Storage files.\n`);
+  console.log(`✅ Cleaned up ${prunedDocCount} expired Firestore records & releases.\n`);
 }
 
 runIngestionPipeline().catch(err => {
