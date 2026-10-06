@@ -337,6 +337,19 @@ async function runIngestionPipeline() {
   let newlyDownloadedCount = 0;
   const newlyDownloadedSlugs = [];
 
+/**
+ * Converts a GramJS Integer, BigInt, or string into a plain JavaScript number primitive
+ * to ensure compatibility with Firestore serialization.
+ */
+function toJSNumber(val) {
+  if (val === null || val === undefined) return 0;
+  if (typeof val === 'number') return val;
+  if (typeof val === 'bigint') return Number(val);
+  const str = val.toString ? val.toString() : String(val);
+  const parsed = Number(str);
+  return isNaN(parsed) ? 0 : parsed;
+}
+
   // Ingest Candidates
   for (const [slug, item] of candidatesMap.entries()) {
     const { msg, doc, filename, classified, msgDateIso } = item;
@@ -352,7 +365,8 @@ async function runIngestionPipeline() {
       console.log(`🔄 Upgrading ${classified.displayName}: ${existingDocData.edition} (P${existingPriority}) -> ${classified.edition} (P${classified.priority})`);
     }
 
-    console.log(`⬇️ Ingesting [${slug}]: ${filename} (${(doc.size / (1024 * 1024)).toFixed(2)} MB)...`);
+    const fileSizeNum = toJSNumber(doc.size);
+    console.log(`⬇️ Ingesting [${slug}]: ${filename} (${(fileSizeNum / (1024 * 1024)).toFixed(2)} MB)...`);
 
     await docRef.set({
       publicationDate: targetDateStr,
@@ -381,13 +395,13 @@ async function runIngestionPipeline() {
         edition: classified.edition,
         priority: classified.priority,
         originalTelegramFilename: filename,
-        telegramMessageId: msg.id.toString(),
-        telegramChannelId: channelId,
+        telegramMessageId: msg.id ? msg.id.toString() : '',
+        telegramChannelId: channelId ? channelId.toString() : '',
         telegramMessageDate: msgDateIso,
         fileUrl: assetRes.fileUrl,
         downloadUrl: assetRes.downloadUrl,
         storageType: assetRes.storageType,
-        fileSize: doc.size,
+        fileSize: fileSizeNum,
         ingestedAt: new Date().toISOString(),
         source: 'telegram',
         status: 'ready',
