@@ -77,103 +77,155 @@ async function handleOndemandRequest(request: NextRequest, isHeadOnly: boolean) 
       );
     }
 
-    // Compute cutoff timestamp (2 days before requestedDate)
-    const [reqYear, reqMonth, reqDay] = requestedDate.split('-').map(Number);
-    const targetUtcMs = Date.UTC(reqYear, reqMonth - 1, reqDay);
-    // 2 days buffer = 2 * 86400 * 1000 = 172800000 ms
-    const cutoffTimestampSec = Math.floor((targetUtcMs - 172800000) / 1000);
+    const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-    const BATCH_SIZE = 100;
-    const MAX_MESSAGES_TO_SCAN = 2000;
-    let totalMessagesScanned = 0;
-    let offsetId = 0;
+    const [yearStr, monthStr, dayStr] = requestedDate.split('-');
+    const year = parseInt(yearStr, 10);
+    const monthIdx = parseInt(monthStr, 10) - 1;
+    const dayNum = parseInt(dayStr, 10);
+
+    const monthName = MONTH_NAMES[monthIdx];
+    const dayPadded = String(dayNum).padStart(2, '0');
+    const dayUnpadded = String(dayNum);
+
+    // Build targeted search queries to leverage Telegram's server-side message index instantly (<200ms)
+    const searchQueries = [
+      `${dayPadded}-${monthStr}`,          // e.g. "03-10"
+      `${yearStr}${monthStr}${dayPadded}`, // e.g. "20261003"
+      `${dayPadded} ${monthName}`,         // e.g. "03 Oct"
+      `${dayUnpadded} ${monthName}`,       // e.g. "3 Oct"
+      `${dayPadded}_${monthStr}`,          // e.g. "03_10"
+    ];
+
     let bestCandidate: any = null;
-    let batchIndex = 0;
+    const messagesToProcess: any[] = [];
+    const seenMsgIds = new Set<number>();
 
-    console.log(`[ON-DEMAND RETRIEVAL] Searching Telegram history...`);
+    console.log(`[ON-DEMAND RETRIEVAL] Executing targeted Telegram server search for date ${requestedDate}...`);
 
-    while (totalMessagesScanned < MAX_MESSAGES_TO_SCAN) {
-      batchIndex++;
-      const options: any = { limit: BATCH_SIZE };
-      if (offsetId > 0) {
-        options.offsetId = offsetId;
-      }
-
-      const messages = await client.getMessages(targetDialog.entity, options);
-      if (!messages || messages.length === 0) {
-        console.log(`[ON-DEMAND RETRIEVAL] No more messages returned by Telegram API.`);
-        break;
-      }
-
-      totalMessagesScanned += messages.length;
-      const newestMsgDate = new Date(messages[0].date * 1000).toISOString().substring(0, 10);
-      const oldestMsgDate = new Date(messages[messages.length - 1].date * 1000).toISOString().substring(0, 10);
-
-      console.log(
-        `[ON-DEMAND RETRIEVAL] Batch ${batchIndex}: Scanned ${messages.length} msgs (Total: ${totalMessagesScanned}) | Date range: ${newestMsgDate} to ${oldestMsgDate}`
-      );
-
-      let reachedCutoff = false;
-
-      for (const msg of messages) {
-        offsetId = msg.id;
-
-        // Check if message date is prior to cutoff
-        if (msg.date < cutoffTimestampSec) {
-          reachedCutoff = true;
-        }
-
-        if (!msg.media || !('document' in msg.media)) continue;
-        const doc = (msg.media as any).document;
-        let filename = '';
-        if (doc && doc.attributes) {
-          for (const attr of doc.attributes) {
-            if (attr.fileName) {
-              filename = attr.fileName;
-              break;
-            }
+    // 1. Run targeted Telegram server-side searches first
+    for (const q of searchQueries) {
+      if (bestCandidate && bestCandidate.classified.priority === 1) break;
+      try {
+        const msgs = await client.getMessages(targetDialog.entity, { search: q, limit: 50 });
+        for (const m of msgs) {
+          if (!seenMsgIds.has(m.id)) {
+            seenMsgIds.add(m.id);
+            messagesToProcess.push(m);
           }
         }
+      } catch (err: any) {
+        console.warn(`[ON-DEMAND RETRIEVAL] Query "${q}" warning:`, err?.message);
+      }
+    }
 
-        if (!filename) continue;
-
-        const msgDateIso = msg.date ? new Date(msg.date * 1000).toISOString() : new Date().toISOString();
-        const classified = classifyDocument(filename, msgDateIso);
-
-        if (!classified.shouldRetain) continue;
-        if (classified.inferredDate !== requestedDate) continue;
-        if (classified.slug !== requestedSlug) continue;
-
-        console.log(
-          `[ON-DEMAND RETRIEVAL] Candidate found: "${filename}" | Edition: ${classified.edition} | Priority: ${classified.priority}`
-        );
-
-        if (!bestCandidate || classified.priority < bestCandidate.classified.priority) {
-          bestCandidate = { msg, doc, filename, classified };
-        }
-
-        // If Priority 1 candidate is found (top priority possible), we can stop immediately!
-        if (bestCandidate.classified.priority === 1) {
-          console.log(`[ON-DEMAND RETRIEVAL] Priority 1 candidate found ("${filename}"). Stopping search immediately.`);
-          break;
+    // Classify candidates from targeted search
+    for (const msg of messagesToProcess) {
+      if (!msg.media || !('document' in msg.media)) continue;
+      const doc = (msg.media as any).document;
+      let filename = '';
+      if (doc && doc.attributes) {
+        for (const attr of doc.attributes) {
+          if (attr.fileName) {
+            filename = attr.fileName;
+            break;
+          }
         }
       }
 
-      // Stop if Priority 1 candidate was found
-      if (bestCandidate && bestCandidate.classified.priority === 1) {
-        break;
+      if (!filename) continue;
+
+      const msgDateIso = msg.date ? new Date(msg.date * 1000).toISOString() : new Date().toISOString();
+      const classified = classifyDocument(filename, msgDateIso);
+
+      if (!classified.shouldRetain) {
+        console.log(`[ON-DEMAND RETRIEVAL] Rejected "${filename}": ${classified.reason}`);
+        continue;
       }
 
-      // Stop if we reached older messages beyond our cutoff
-      if (reachedCutoff) {
-        console.log(`[ON-DEMAND RETRIEVAL] Reached historical cutoff date (${new Date(cutoffTimestampSec * 1000).toISOString().substring(0, 10)}). Stopping search.`);
+      if (classified.inferredDate !== requestedDate) {
+        console.log(`[ON-DEMAND RETRIEVAL] Date mismatch for "${filename}": inferred ${classified.inferredDate} vs requested ${requestedDate}`);
+        continue;
+      }
+
+      if (classified.slug !== requestedSlug) {
+        continue;
+      }
+
+      console.log(
+        `[ON-DEMAND RETRIEVAL] Candidate found: "${filename}" | Edition: ${classified.edition} | Priority: ${classified.priority}`
+      );
+
+      if (!bestCandidate || classified.priority < bestCandidate.classified.priority) {
+        bestCandidate = { msg, doc, filename, classified };
+      }
+
+      if (bestCandidate.classified.priority === 1) {
+        console.log(`[ON-DEMAND RETRIEVAL] Priority 1 candidate found ("${filename}"). Stopping search.`);
         break;
+      }
+    }
+
+    // 2. Fallback: If targeted search did not yield a Priority 1 candidate, perform a quick paginated scan
+    if (!bestCandidate || bestCandidate.classified.priority > 1) {
+      console.log(`[ON-DEMAND RETRIEVAL] Targeted search did not yield Priority 1 match. Running paginated fallback scan...`);
+      const targetUtcMs = Date.UTC(year, monthIdx, dayNum);
+      const cutoffTimestampSec = Math.floor((targetUtcMs - 172800000) / 1000);
+
+      let offsetId = 0;
+      let batchCount = 0;
+
+      while (batchCount < 10) {
+        batchCount++;
+        const options: any = { limit: 100 };
+        if (offsetId > 0) options.offsetId = offsetId;
+
+        const msgs = await client.getMessages(targetDialog.entity, options);
+        if (!msgs || msgs.length === 0) break;
+
+        const minId = Math.min(...msgs.map(m => m.id));
+        offsetId = minId;
+
+        let reachedCutoff = false;
+
+        for (const msg of msgs) {
+          if (msg.date < cutoffTimestampSec) reachedCutoff = true;
+          if (!msg.media || !('document' in msg.media)) continue;
+          const doc = (msg.media as any).document;
+          let filename = '';
+          if (doc && doc.attributes) {
+            for (const attr of doc.attributes) {
+              if (attr.fileName) filename = attr.fileName;
+            }
+          }
+          if (!filename) continue;
+
+          const msgDateIso = new Date(msg.date * 1000).toISOString();
+          const classified = classifyDocument(filename, msgDateIso);
+
+          if (!classified.shouldRetain) continue;
+          if (classified.inferredDate !== requestedDate) continue;
+          if (classified.slug !== requestedSlug) continue;
+
+          console.log(
+            `[ON-DEMAND RETRIEVAL] Fallback candidate found: "${filename}" | Edition: ${classified.edition} | Priority: ${classified.priority}`
+          );
+
+          if (!bestCandidate || classified.priority < bestCandidate.classified.priority) {
+            bestCandidate = { msg, doc, filename, classified };
+          }
+
+          if (bestCandidate.classified.priority === 1) break;
+        }
+
+        if (bestCandidate && bestCandidate.classified.priority === 1) break;
+        if (reachedCutoff) break;
       }
     }
 
     if (!bestCandidate) {
       console.log(
-        `[ON-DEMAND RETRIEVAL] Result: Edition not found for date ${requestedDate} and slug ${requestedSlug} after scanning ${totalMessagesScanned} messages.`
+        `[ON-DEMAND RETRIEVAL] Result: Edition not found for date ${requestedDate} and slug ${requestedSlug}.`
       );
       await client.disconnect();
       return NextResponse.json(
