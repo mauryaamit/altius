@@ -55,6 +55,8 @@ const DISPLAY_NAMES = {
   'hindustan-times': 'Hindustan Times',
   'international-editorial': 'International Editorial',
   'hindi-editorial': 'Hindi Editorial',
+  'all-english-editorials': 'All English Editorials',
+  'daily-vocabulary': 'Daily Vocabulary',
 };
 
 /**

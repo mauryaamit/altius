@@ -13,6 +13,8 @@ const TARGET_METADATA: Record<string, { displayName: string; category: string }>
   'hindustan-times': { displayName: 'Hindustan Times', category: 'Hindustan Times' },
   'international-editorial': { displayName: 'International Editorial', category: 'International Editorial' },
   'hindi-editorial': { displayName: 'Hindi Editorial', category: 'Hindi Editorial' },
+  'all-english-editorials': { displayName: 'All English Editorials', category: 'All English Editorials' },
+  'daily-vocabulary': { displayName: 'Daily Vocabulary', category: 'Daily Vocabulary' },
 };
 
 export async function GET(request: NextRequest) {

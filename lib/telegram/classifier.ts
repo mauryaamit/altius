@@ -131,6 +131,16 @@ export function classifyDocument(filename: string, messageDateIso: string): Clas
     return buildResult(true, 'international-editorial', 'International Editorial', 'International Editorial', 'global', 1, 'Target: International Editorial');
   }
 
+  // 3b. All English Editorials
+  if (lower.includes('all english editorial') || lower.includes('all english editorials')) {
+    return buildResult(true, 'all-english-editorials', 'All English Editorials', 'All English Editorials', 'global', 1, 'Target: All English Editorials');
+  }
+
+  // 3c. Daily Vocabulary
+  if (lower.includes('daily vocabulary') || (lower.includes('vocabulary') && !lower.includes('hindu'))) {
+    return buildResult(true, 'daily-vocabulary', 'Daily Vocabulary', 'Daily Vocabulary', 'global', 1, 'Target: Daily Vocabulary');
+  }
+
   // 4. Hindi Editorial
   if (lower.includes('hindi editorial')) {
     return buildResult(true, 'hindi-editorial', 'Hindi Editorial', 'Hindi Editorial', 'national', 1, 'Target: Hindi Editorial');
@@ -138,8 +148,8 @@ export function classifyDocument(filename: string, messageDateIso: string): Clas
 
   // Helper to determine edition priority (Mumbai P1 -> Delhi P2 -> Main/National P2 -> Regional P3)
   const getEditionInfo = (str: string) => {
-    if (str.includes('mumbai')) return { edition: 'mumbai', priority: 1 };
-    if (str.includes('delhi')) return { edition: 'delhi', priority: 2 };
+    if (str.includes('mumbai') || str.startsWith('th-mumbai')) return { edition: 'mumbai', priority: 1 };
+    if (str.includes('delhi') || str.startsWith('th-delhi')) return { edition: 'delhi', priority: 2 };
     return { edition: 'main', priority: 2 };
   };
 
@@ -150,9 +160,11 @@ export function classifyDocument(filename: string, messageDateIso: string): Clas
     lower.includes('supplement') ||
     lower.includes('epaper city');
 
-  // 5. The Hindu (Exclude HT / Tamil / Hindi translations)
-  if ((lower.includes('hindu') || lower.startsWith('th ')) && !lower.includes('hindustan') && !lower.includes('tamil')) {
-    if (isSupplementOrSubEdition) return buildResult(false, 'the-hindu', 'The Hindu', 'The Hindu', 'sub-edition', 99, 'Excluded Hindu sub-edition/supplement');
+  // 5. The Hindu (Exclude HT / Tamil / Hindi / Analysis / non-newspaper supplements)
+  if ((lower.includes('hindu') || lower.startsWith('th-') || lower.startsWith('th ')) && !lower.includes('hindustan') && !lower.includes('tamil')) {
+    if (lower.includes('analysis') || lower.includes('in hindi') || isSupplementOrSubEdition) {
+      return buildResult(false, 'the-hindu', 'The Hindu', 'The Hindu', 'sub-edition', 99, 'Excluded Hindu analysis/Hindi/supplement');
+    }
     const { edition, priority } = getEditionInfo(lower);
     return buildResult(true, 'the-hindu', 'The Hindu', 'The Hindu', edition, priority, `Target: The Hindu (${edition})`);
   }
@@ -218,7 +230,7 @@ export function classifyDocument(filename: string, messageDateIso: string): Clas
 }
 
 /**
- * List of all 8 target slugs in order.
+ * List of all 10 target slugs in order.
  */
 export const TARGET_NEWSPAPER_SLUGS = [
   'the-hindu',
@@ -229,4 +241,6 @@ export const TARGET_NEWSPAPER_SLUGS = [
   'hindustan-times',
   'international-editorial',
   'hindi-editorial',
+  'all-english-editorials',
+  'daily-vocabulary',
 ];

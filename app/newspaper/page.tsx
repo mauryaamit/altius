@@ -37,7 +37,7 @@ interface MetadataResponse {
   error?: string;
 }
 
-const TARGET_SLUGS = [
+const CORE_SLUGS = [
   'the-hindu',
   'indian-express',
   'mint',
@@ -47,6 +47,13 @@ const TARGET_SLUGS = [
   'international-editorial',
   'hindi-editorial',
 ];
+
+const SUPPLEMENTARY_SLUGS = [
+  'all-english-editorials',
+  'daily-vocabulary',
+];
+
+const TARGET_SLUGS = [...CORE_SLUGS, ...SUPPLEMENTARY_SLUGS];
 
 export default function NewspaperPage() {
   const router = useRouter();
@@ -123,6 +130,66 @@ export default function NewspaperPage() {
     }).toUpperCase();
   };
 
+  const renderPaperCard = (paper: NewspaperCard, isStored: boolean = true) => {
+    const isAvailable = paper.status === 'ready' && Boolean(paper.fileUrl);
+    const fileSizeMB = paper.fileSize ? (paper.fileSize / (1024 * 1024)).toFixed(1) + ' MB' : '';
+
+    return (
+      <div
+        key={paper.slug}
+        className={`paper-tile flex flex-col justify-between p-5 bg-white border rounded-xl transition-all duration-200 ${
+          isAvailable
+            ? 'border-[#E2DDD5] shadow-xs hover:border-[#0F172A] hover:shadow-md'
+            : 'border-slate-200 opacity-70 bg-slate-50'
+        }`}
+      >
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <span className="font-mono text-[10px] uppercase font-semibold tracking-wider px-2.5 py-0.5 rounded bg-amber-50 text-amber-900 border border-amber-200">
+              {paper.edition && paper.edition !== 'none' ? `${paper.edition} EDITION` : 'NATIONAL'}
+            </span>
+            {isAvailable ? (
+              <span className="flex items-center text-xs text-emerald-700 font-mono font-medium gap-1">
+                <CheckCircle2 size={13} /> {isStored ? 'Available' : 'Stored'}
+              </span>
+            ) : (
+              <span className="flex items-center text-xs text-slate-400 font-mono gap-1">
+                <XCircle size={13} /> Pending
+              </span>
+            )}
+          </div>
+
+          <h3 className="font-display text-lg text-[#0F172A] font-semibold leading-snug mb-1">
+            {paper.displayName}
+          </h3>
+        </div>
+
+        <div className="mt-5 pt-3 border-t border-[#F1ECE4] flex items-center justify-between">
+          <span className="font-mono text-xs text-[#64748B] font-medium">
+            {fileSizeMB ? fileSizeMB : 'PDF'}
+          </span>
+
+          {isAvailable ? (
+            <Link
+              href={`/newspaper/${paper.publicationDate}/${paper.slug}`}
+              className="read-action-btn inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-mono font-semibold text-white bg-[#0F172A] hover:bg-slate-800 transition-colors shadow-xs"
+            >
+              Read Edition <ArrowRight size={13} />
+            </Link>
+          ) : (
+            <span className="text-xs font-mono text-slate-400 italic">Not ready</span>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const todayCorePapers = data?.todayNewspapers.filter((p) => CORE_SLUGS.includes(p.slug)) || [];
+  const todaySuppPapers = data?.todayNewspapers.filter((p) => SUPPLEMENTARY_SLUGS.includes(p.slug)) || [];
+
+  const prevCorePapers = data?.previousNewspapers.filter((p) => CORE_SLUGS.includes(p.slug)) || [];
+  const prevSuppPapers = data?.previousNewspapers.filter((p) => SUPPLEMENTARY_SLUGS.includes(p.slug)) || [];
+
   return (
     <div className="newspaper-desk-root min-h-screen bg-[#FDFBF7] text-[#1A1918] px-4 py-8 md:px-8 max-w-6xl mx-auto">
       {/* ─── SECTION 1: TODAY ───────────────────────────────────────────── */}
@@ -137,11 +204,11 @@ export default function NewspaperPage() {
           Newspaper Room
         </h1>
         <p className="font-body text-base text-[#475569] mt-2 max-w-2xl leading-relaxed">
-          Your daily reading desk — eight essential national editions and international briefs, curated in one place.
+          Your daily reading desk — essential national editions, editorial briefs, and daily vocabulary compilations.
         </p>
       </header>
 
-      {/* TODAY 8-CARD GRID */}
+      {/* TODAY CORE 8 CARDS */}
       <section className="mb-14">
         <div className="flex items-center justify-between mb-6">
           <h2 className="font-display text-2xl font-medium text-[#0F172A] flex items-center gap-2">
@@ -155,7 +222,7 @@ export default function NewspaperPage() {
 
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-            {TARGET_SLUGS.map((s) => (
+            {CORE_SLUGS.map((s) => (
               <div key={s} className="h-44 bg-[#F1ECE4] border border-[#E2DDD5] rounded-lg animate-pulse p-4" />
             ))}
           </div>
@@ -165,59 +232,20 @@ export default function NewspaperPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-            {data?.todayNewspapers.map((paper) => {
-              const isAvailable = paper.status === 'ready' && Boolean(paper.fileUrl);
-              const fileSizeMB = paper.fileSize ? (paper.fileSize / (1024 * 1024)).toFixed(1) + ' MB' : '';
+            {todayCorePapers.map((paper) => renderPaperCard(paper, true))}
+          </div>
+        )}
 
-              return (
-                <div
-                  key={paper.slug}
-                  className={`paper-tile flex flex-col justify-between p-5 bg-white border rounded-xl transition-all duration-200 ${
-                    isAvailable
-                      ? 'border-[#E2DDD5] shadow-xs hover:border-[#0F172A] hover:shadow-md'
-                      : 'border-slate-200 opacity-70 bg-slate-50'
-                  }`}
-                >
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="font-mono text-[10px] uppercase font-semibold tracking-wider px-2.5 py-0.5 rounded bg-amber-50 text-amber-900 border border-amber-200">
-                        {paper.edition && paper.edition !== 'none' ? `${paper.edition} EDITION` : 'NATIONAL'}
-                      </span>
-                      {isAvailable ? (
-                        <span className="flex items-center text-xs text-emerald-700 font-mono font-medium gap-1">
-                          <CheckCircle2 size={13} /> Available
-                        </span>
-                      ) : (
-                        <span className="flex items-center text-xs text-slate-400 font-mono gap-1">
-                          <XCircle size={13} /> Pending
-                        </span>
-                      )}
-                    </div>
-
-                    <h3 className="font-display text-lg text-[#0F172A] font-semibold leading-snug mb-1">
-                      {paper.displayName}
-                    </h3>
-                  </div>
-
-                  <div className="mt-5 pt-3 border-t border-[#F1ECE4] flex items-center justify-between">
-                    <span className="font-mono text-xs text-[#64748B] font-medium">
-                      {fileSizeMB ? fileSizeMB : 'PDF'}
-                    </span>
-
-                    {isAvailable ? (
-                      <Link
-                        href={`/newspaper/${paper.publicationDate}/${paper.slug}`}
-                        className="read-action-btn inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-mono font-semibold text-white bg-[#0F172A] hover:bg-slate-800 transition-colors shadow-xs"
-                      >
-                        Read Edition <ArrowRight size={13} />
-                      </Link>
-                    ) : (
-                      <span className="text-xs font-mono text-slate-400 italic">Not ready</span>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+        {/* TODAY SUPPLEMENTARY READING (2 NEW CARDS) */}
+        {!loading && !error && todaySuppPapers.length > 0 && (
+          <div className="mt-10 pt-6 border-t border-[#F1ECE4]">
+            <h3 className="font-mono text-xs uppercase tracking-widest text-[#64748B] font-bold mb-4 flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-amber-700" />
+              Supplementary Reading
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+              {todaySuppPapers.map((paper) => renderPaperCard(paper, true))}
+            </div>
           </div>
         )}
       </section>
@@ -240,54 +268,21 @@ export default function NewspaperPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-            {data.previousNewspapers.map((paper) => {
-              const isAvailable = paper.status === 'ready' && Boolean(paper.fileUrl);
-              const fileSizeMB = paper.fileSize ? (paper.fileSize / (1024 * 1024)).toFixed(1) + ' MB' : '';
-
-              return (
-                <div
-                  key={paper.slug}
-                  className={`paper-tile flex flex-col justify-between p-5 bg-white border rounded-xl transition-all duration-200 ${
-                    isAvailable
-                      ? 'border-[#E2DDD5] hover:border-[#0F172A] hover:shadow-md'
-                      : 'border-slate-200 opacity-60 bg-slate-50'
-                  }`}
-                >
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="font-mono text-[10px] uppercase font-semibold tracking-wider px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">
-                        {paper.edition && paper.edition !== 'none' ? `${paper.edition}` : 'NATIONAL'}
-                      </span>
-                      <span className="flex items-center text-xs text-emerald-700 font-mono font-medium gap-1">
-                        <CheckCircle2 size={13} /> Stored
-                      </span>
-                    </div>
-
-                    <h3 className="font-display text-lg text-[#0F172A] font-semibold leading-snug mb-1">
-                      {paper.displayName}
-                    </h3>
-                  </div>
-
-                  <div className="mt-5 pt-3 border-t border-[#F1ECE4] flex items-center justify-between">
-                    <span className="font-mono text-xs text-[#64748B]">
-                      {fileSizeMB ? fileSizeMB : 'PDF'}
-                    </span>
-
-                    {isAvailable ? (
-                      <Link
-                        href={`/newspaper/${paper.publicationDate}/${paper.slug}`}
-                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-mono font-medium text-[#0F172A] bg-slate-100 hover:bg-slate-200 transition-colors border border-slate-300"
-                      >
-                        Read <ArrowRight size={12} />
-                      </Link>
-                    ) : (
-                      <span className="text-xs font-mono text-slate-400 italic">No file</span>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+            {prevCorePapers.map((paper) => renderPaperCard(paper, true))}
           </div>
+
+          {/* YESTERDAY SUPPLEMENTARY READING */}
+          {prevSuppPapers.length > 0 && (
+            <div className="mt-10 pt-6 border-t border-[#F1ECE4]">
+              <h3 className="font-mono text-xs uppercase tracking-widest text-[#64748B] font-bold mb-4 flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-amber-700" />
+                Supplementary Reading
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+                {prevSuppPapers.map((paper) => renderPaperCard(paper, true))}
+              </div>
+            </div>
+          )}
         </section>
       )}
 

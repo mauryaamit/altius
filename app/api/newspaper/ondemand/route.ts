@@ -97,6 +97,12 @@ async function handleOndemandRequest(request: NextRequest, isHeadOnly: boolean) 
       `${dayPadded}_${monthStr}`,          // e.g. "03_10"
     ];
 
+    if (requestedSlug === 'all-english-editorials') {
+      searchQueries.unshift('All English Editorial', 'English Editorial');
+    } else if (requestedSlug === 'daily-vocabulary') {
+      searchQueries.unshift('Daily Vocabulary', 'Vocabulary');
+    }
+
     let bestCandidate: any = null;
     const messagesToProcess: any[] = [];
     const seenMsgIds = new Set<number>();
