@@ -91,6 +91,8 @@ async function handleOndemandRequest(request: NextRequest, isHeadOnly: boolean) 
     // Build targeted search queries to leverage Telegram's server-side message index instantly (<200ms)
     const searchQueries = [
       `${dayPadded}-${monthStr}`,          // e.g. "03-10"
+      `${dayUnpadded}--${monthStr}`,       // e.g. "9--10"
+      `${dayUnpadded}-${monthStr}`,        // e.g. "9-10"
       `${yearStr}${monthStr}${dayPadded}`, // e.g. "20261003"
       `${dayPadded} ${monthName}`,         // e.g. "03 Oct"
       `${dayUnpadded} ${monthName}`,       // e.g. "3 Oct"
@@ -101,6 +103,10 @@ async function handleOndemandRequest(request: NextRequest, isHeadOnly: boolean) 
       searchQueries.unshift('All English Editorial', 'English Editorial');
     } else if (requestedSlug === 'daily-vocabulary') {
       searchQueries.unshift('Daily Vocabulary', 'Vocabulary');
+    } else if (requestedSlug === 'international-editorial') {
+      searchQueries.unshift('International Editorial', 'International');
+    } else if (requestedSlug === 'hindi-editorial') {
+      searchQueries.unshift('Hindi Editorial', 'All Hindi Editorial');
     }
 
     let bestCandidate: any = null;

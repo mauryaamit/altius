@@ -209,30 +209,27 @@ async function runIngestionPipeline() {
   });
 
   const readySlugs = new Set();
-  let htNeedsUpgrade = false;
+  const upgradeSlugs = new Set();
 
   TARGET_NEWSPAPER_SLUGS.forEach(slug => {
     const docData = statusMap.get(slug);
-    if (docData && docData.status === 'ready') {
-      if (slug === 'hindustan-times') {
-        if (docData.edition === 'mumbai') {
-          readySlugs.add(slug);
-        } else {
-          readySlugs.add(slug);
-          htNeedsUpgrade = true;
-        }
-      } else {
-        readySlugs.add(slug);
+    if (docData && docData.status === 'ready' && docData.fileUrl) {
+      readySlugs.add(slug);
+      const currentPriority = docData.priority ?? 2;
+      if (currentPriority > 1) {
+        upgradeSlugs.add(slug);
       }
     }
   });
 
+  const totalCategories = TARGET_NEWSPAPER_SLUGS.length;
+
   // Early Completion Exit Check
-  if (readySlugs.size === 8 && !htNeedsUpgrade) {
+  if (readySlugs.size === totalCategories && upgradeSlugs.size === 0) {
     console.log('======================================================');
-    console.log('  PROGRESS: 8/8');
+    console.log(`  PROGRESS: ${totalCategories}/${totalCategories}`);
     console.log('  STATUS: COMPLETE');
-    console.log('  All 8 target categories are fully ingested for today.');
+    console.log(`  All ${totalCategories} target categories are fully ingested for today.`);
     console.log('  No further Telegram processing required.');
     console.log('======================================================\n');
 
@@ -240,19 +237,20 @@ async function runIngestionPipeline() {
     process.exit(0);
   }
 
-  // Identify Missing Categories
-  const missingSlugs = TARGET_NEWSPAPER_SLUGS.filter(s => !readySlugs.has(s) || (s === 'hindustan-times' && htNeedsUpgrade));
+  // Identify Missing or Upgradeable Categories
+  const missingSlugs = TARGET_NEWSPAPER_SLUGS.filter(s => !readySlugs.has(s) || upgradeSlugs.has(s));
 
-  console.log(`Already Completed (${readySlugs.size}/8):`);
+  console.log(`Already Completed (${readySlugs.size}/${totalCategories}):`);
   TARGET_NEWSPAPER_SLUGS.forEach(slug => {
-    if (readySlugs.has(slug) && !(slug === 'hindustan-times' && htNeedsUpgrade)) {
+    if (readySlugs.has(slug) && !upgradeSlugs.has(slug)) {
       console.log(`  ✓ ${DISPLAY_NAMES[slug]} (${statusMap.get(slug)?.edition || 'ready'})`);
     }
   });
 
   console.log(`\nMissing / Target Categories (${missingSlugs.length}):`);
   missingSlugs.forEach(slug => {
-    const note = (slug === 'hindustan-times' && htNeedsUpgrade) ? ' (Searching for Priority 1 Mumbai upgrade)' : '';
+    const isUpgrade = upgradeSlugs.has(slug);
+    const note = isUpgrade ? ` (Searching for Priority 1 upgrade, current P${statusMap.get(slug)?.priority || 2})` : '';
     console.log(`  ⏳ ${DISPLAY_NAMES[slug]}${note}`);
   });
   console.log('');
@@ -294,8 +292,8 @@ async function runIngestionPipeline() {
 
   const channelId = targetDialog.id ? targetDialog.id.toString() : targetDialog.entity.id.toString();
 
-  console.log('📥 Scanning recent Telegram channel messages...');
-  const messages = await client.getMessages(targetDialog.entity, { limit: 250 });
+  console.log('📥 Scanning recent Telegram channel messages (limit 600)...');
+  const messages = await client.getMessages(targetDialog.entity, { limit: 600 });
 
   const candidatesMap = new Map();
 
@@ -321,8 +319,16 @@ async function runIngestionPipeline() {
     if (classified.inferredDate !== targetDateStr) continue;
 
     const slug = classified.slug;
-    const isMissing = missingSlugs.includes(slug);
-    if (!isMissing) continue;
+    const isTarget = missingSlugs.includes(slug);
+    if (!isTarget) continue;
+
+    const existingDocData = statusMap.get(slug);
+    if (existingDocData && existingDocData.status === 'ready' && existingDocData.fileUrl) {
+      const existingPriority = existingDocData.priority ?? 2;
+      if (classified.priority >= existingPriority) {
+        continue; // Don't replace equal or lower priority
+      }
+    }
 
     const existingCandidate = candidatesMap.get(slug);
     if (!existingCandidate || classified.priority < existingCandidate.classified.priority) {
@@ -359,8 +365,8 @@ function toJSNumber(val) {
     const docRef = db.collection('newspapers').doc(key);
     const existingDocData = statusMap.get(slug);
 
-    if (existingDocData && existingDocData.status === 'ready') {
-      const existingPriority = existingDocData.priority ?? 1;
+    if (existingDocData && existingDocData.status === 'ready' && existingDocData.fileUrl) {
+      const existingPriority = existingDocData.priority ?? 2;
       if (classified.priority >= existingPriority) {
         continue;
       }
@@ -427,22 +433,22 @@ function toJSNumber(val) {
 
   const finalReadyCount = readySlugs.size;
   const isFinalRun = currentHour >= 21;
-  const overallStatus = finalReadyCount === 8 ? 'COMPLETE' : isFinalRun ? 'INCOMPLETE (Final Cutoff Passed)' : 'PARTIAL';
+  const overallStatus = finalReadyCount === totalCategories ? 'COMPLETE' : isFinalRun ? 'INCOMPLETE (Final Cutoff Passed)' : 'PARTIAL';
 
   console.log('\n======================================================');
   console.log('   ALTIUS NEWSPAPER INGESTION SUMMARY');
   console.log(`   Date: ${targetDateStr} | Time: ${timeLabel}`);
   console.log('------------------------------------------------------');
-  console.log(`Already Complete (${readySlugs.size - newlyDownloadedCount}/8)`);
-  console.log(`Newly Downloaded (${newlyDownloadedCount}/8): ${newlyDownloadedSlugs.map(s => DISPLAY_NAMES[s]).join(', ') || 'None'}`);
+  console.log(`Already Complete (${readySlugs.size - newlyDownloadedCount}/${totalCategories})`);
+  console.log(`Newly Downloaded (${newlyDownloadedCount}/${totalCategories}): ${newlyDownloadedSlugs.map(s => DISPLAY_NAMES[s]).join(', ') || 'None'}`);
 
   const stillMissing = TARGET_NEWSPAPER_SLUGS.filter(s => !readySlugs.has(s));
-  console.log(`Still Missing (${stillMissing.length}/8): ${stillMissing.map(s => DISPLAY_NAMES[s]).join(', ') || 'None'}`);
+  console.log(`Still Missing (${stillMissing.length}/${totalCategories}): ${stillMissing.map(s => DISPLAY_NAMES[s]).join(', ') || 'None'}`);
 
   console.log('------------------------------------------------------');
-  console.log(`PROGRESS: ${finalReadyCount}/8`);
+  console.log(`PROGRESS: ${finalReadyCount}/${totalCategories}`);
   console.log(`STATUS  : ${overallStatus}`);
-  if (finalReadyCount < 8 && !isFinalRun) {
+  if (finalReadyCount < totalCategories && !isFinalRun) {
     console.log(`Next scheduled check in 3 hours.`);
   }
   console.log('======================================================\n');
