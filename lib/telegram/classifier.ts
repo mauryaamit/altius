@@ -143,7 +143,15 @@ export function classifyDocument(filename: string, messageDateIso: string): Clas
   }
 
   // 2. Strict Ignore: NIE / New Indian Express
-  if (lower.includes('nie') || lower.includes('new indian express')) {
+  const isNIE =
+    lower.includes('nie') ||
+    lower.includes('new indian express') ||
+    lower.includes('the new indian express') ||
+    lower.includes('the_new_indian_express') ||
+    lower.includes('_nie_') ||
+    lower.includes('-nie-');
+
+  if (isNIE) {
     return buildResult(false, 'ignore', 'Ignore', 'IGNORE', 'none', 99, 'NIE (The New Indian Express) is strictly ignored');
   }
 
@@ -192,7 +200,7 @@ export function classifyDocument(filename: string, messageDateIso: string): Clas
   }
 
   // 6. The Indian Express (Exclude NIE)
-  if (lower.startsWith('ie-') || lower.startsWith('ie ') || lower.includes('indian express')) {
+  if (lower.startsWith('ie-') || lower.startsWith('ie ') || lower.startsWith('ie_') || lower.includes('indian express') || lower.includes('indian_express')) {
     if (isSupplementOrSubEdition) return buildResult(false, 'indian-express', 'The Indian Express', 'The Indian Express', 'sub-edition', 99, 'Excluded IE sub-edition/supplement');
     const { edition, priority } = getEditionInfo(lower);
     return buildResult(true, 'indian-express', 'The Indian Express', 'The Indian Express', edition, priority, `Target: The Indian Express (${edition})`);

@@ -62,4 +62,7 @@ jobs:
             npx tsx scripts/ingest-newspapers.mjs --date=${{ inputs.publication_date }}
           else
             npx tsx scripts/ingest-newspapers.mjs
+            YESTERDAY=$(date -d "yesterday" +%Y-%m-%d 2>/dev/null || date -v-1d +%Y-%m-%d)
+            echo "Running ingestion check for yesterday ($YESTERDAY)..."
+            npx tsx scripts/ingest-newspapers.mjs --date=$YESTERDAY || true
           fi
