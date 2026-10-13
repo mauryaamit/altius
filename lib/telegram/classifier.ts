@@ -177,8 +177,8 @@ export function classifyDocument(filename: string, messageDateIso: string): Clas
 
   // Helper to determine edition priority (Mumbai P1 -> Delhi P2 -> Main/National P3)
   const getEditionInfo = (str: string) => {
-    if (str.includes('mumbai') || str.startsWith('th-mumbai') || str.startsWith('ths-mumbai') || str.includes('mumbaicity')) return { edition: 'mumbai', priority: 1 };
-    if (str.includes('delhi') || str.startsWith('th-delhi') || str.startsWith('ths-delhi') || str.includes('delhicity')) return { edition: 'delhi', priority: 2 };
+    if (str.includes('mumbai') || str.startsWith('th-mumbai') || str.includes('mumbaicity') || str.includes(' mum ') || str.endsWith(' mum') || str.includes('-mum') || str.includes('_mum')) return { edition: 'mumbai', priority: 1 };
+    if (str.includes('delhi') || str.startsWith('th-delhi') || str.includes('delhicity')) return { edition: 'delhi', priority: 2 };
     return { edition: 'main', priority: 3 };
   };
 
@@ -190,13 +190,22 @@ export function classifyDocument(filename: string, messageDateIso: string): Clas
     lower.includes('supplement') ||
     (lower.includes('city') && !lower.includes('mumbaicity') && !lower.includes('delhicity') && !lower.includes('mumbai city') && !lower.includes('delhi city'));
 
-  // 5. The Hindu (Exclude HT / Tamil / Hindi / Analysis / School / non-newspaper supplements)
-  if ((lower.includes('hindu') || lower.startsWith('ths-') || lower.startsWith('ths ') || lower.startsWith('th-') || lower.startsWith('th ')) && !lower.includes('hindustan') && !lower.includes('tamil')) {
-    if (lower.includes('analysis') || lower.includes('in hindi') || lower.includes('school') || lower.includes('in school') || isSupplementOrSubEdition) {
-      return buildResult(false, 'the-hindu', 'The Hindu', 'The Hindu', 'sub-edition', 99, 'Excluded Hindu analysis/Hindi/School/Supplement');
+  // 5. The Hindu
+  // Strict exclusion: THS- prefix = The Hindu School editions (NOT the main newspaper)
+  const isTHSSchoolEdition = lower.startsWith('ths-') || lower.startsWith('ths ');
+
+  if ((lower.includes('hindu') || lower.startsWith('th-') || lower.startsWith('th ')) && !lower.includes('hindustan') && !lower.includes('tamil')) {
+    // Exclude school editions (THS- prefix), analysis PDFs, Hindi translations, supplements
+    if (isTHSSchoolEdition || lower.includes('analysis') || lower.includes('in hindi') || lower.includes('school') || lower.includes('in school') || isSupplementOrSubEdition) {
+      return buildResult(false, 'the-hindu', 'The Hindu', 'The Hindu', 'sub-edition', 99, 'Excluded Hindu School/analysis/Hindi/Supplement');
     }
     const { edition, priority } = getEditionInfo(lower);
     return buildResult(true, 'the-hindu', 'The Hindu', 'The Hindu', edition, priority, `Target: The Hindu (${edition})`);
+  }
+
+  // THS- files that don't contain 'hindu' — also explicitly ignored
+  if (isTHSSchoolEdition) {
+    return buildResult(false, 'ignore', 'Ignore', 'IGNORE', 'none', 99, 'THS- school edition — not a main Hindu newspaper');
   }
 
   // 6. The Indian Express (Exclude NIE)
