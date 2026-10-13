@@ -26,9 +26,23 @@ if (existsSync(envPath)) {
 
 // 2. Initialize Firebase Admin (Firestore only, no bucket requirement)
 if (!getApps().length) {
-  const projectId = process.env.FIREBASE_PROJECT_ID || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
-  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-  const privateKey = process.env.FIREBASE_PRIVATE_KEY;
+  let projectId = process.env.FIREBASE_PROJECT_ID || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+  let clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+  let privateKey = process.env.FIREBASE_PRIVATE_KEY;
+
+  if (!clientEmail || !privateKey) {
+    const saPath = resolve(__dirname, '..', 'altius-436b0-firebase-adminsdk-fbsvc-c39c332819.json');
+    if (existsSync(saPath)) {
+      try {
+        const sa = JSON.parse(readFileSync(saPath, 'utf-8'));
+        projectId = projectId || sa.project_id;
+        clientEmail = sa.client_email;
+        privateKey = sa.private_key;
+      } catch (e) {
+        // ignore
+      }
+    }
+  }
 
   if (!projectId || !clientEmail || !privateKey) {
     console.error('❌ Firebase Admin credentials missing in environment variables.');
@@ -184,6 +198,10 @@ async function runIngestionPipeline() {
   const dateArg = process.argv.find(arg => arg.startsWith('--date='))?.split('=')[1] ||
                   (process.argv.indexOf('--date') !== -1 ? process.argv[process.argv.indexOf('--date') + 1] : null);
 
+  // Parse optional --force-slug=slug to force targeted refresh of a specific category
+  const forceSlugArg = process.argv.find(arg => arg.startsWith('--force-slug='))?.split('=')[1] ||
+                       (process.argv.indexOf('--force-slug') !== -1 ? process.argv[process.argv.indexOf('--force-slug') + 1] : null);
+
   const targetDateStr = dateArg || todayStr;
 
   const currentHour = nowIST.getHours();
@@ -192,6 +210,7 @@ async function runIngestionPipeline() {
   console.log('\n======================================================');
   console.log('   ALTIUS NEWSPAPER INGESTION WORKER (Zero-Cost Storage)');
   console.log(`   Target Publication Date: ${targetDateStr}${dateArg ? ' [MANUAL BACKFILL MODE]' : ' [SCHEDULED MODE]'}`);
+  if (forceSlugArg) console.log(`   Targeted Force Refresh: [${forceSlugArg}]`);
   console.log(`   Execution Time: ${timeLabel}`);
   console.log('======================================================\n');
 
@@ -213,7 +232,26 @@ async function runIngestionPipeline() {
 
   TARGET_NEWSPAPER_SLUGS.forEach(slug => {
     const docData = statusMap.get(slug);
+    let isCurrentlyValid = false;
+
     if (docData && docData.status === 'ready' && docData.fileUrl) {
+      if (forceSlugArg && slug === forceSlugArg) {
+        console.log(`⚡ Targeted force-refresh requested for [${slug}]. Treating as pending.`);
+        isCurrentlyValid = false;
+      } else if (docData.originalTelegramFilename) {
+        const recheck = classifyDocument(docData.originalTelegramFilename, docData.telegramMessageDate || '');
+        if (recheck.shouldRetain && recheck.slug === slug) {
+          isCurrentlyValid = true;
+        } else {
+          console.log(`⚠️ Stored document for [${slug}] ("${docData.originalTelegramFilename}") is invalid under updated classifier rules. Marking for re-ingestion.`);
+          isCurrentlyValid = false;
+        }
+      } else {
+        isCurrentlyValid = true;
+      }
+    }
+
+    if (isCurrentlyValid) {
       readySlugs.add(slug);
       const currentPriority = docData.priority ?? 2;
       if (currentPriority > 1) {
@@ -324,9 +362,16 @@ async function runIngestionPipeline() {
 
     const existingDocData = statusMap.get(slug);
     if (existingDocData && existingDocData.status === 'ready' && existingDocData.fileUrl) {
-      const existingPriority = existingDocData.priority ?? 2;
-      if (classified.priority >= existingPriority) {
-        continue; // Don't replace equal or lower priority
+      const isForced = forceSlugArg && slug === forceSlugArg;
+      const existingStillValid = (!isForced && existingDocData.originalTelegramFilename)
+        ? (classifyDocument(existingDocData.originalTelegramFilename, existingDocData.telegramMessageDate || '').shouldRetain)
+        : false;
+
+      if (existingStillValid) {
+        const existingPriority = existingDocData.priority ?? 2;
+        if (classified.priority >= existingPriority) {
+          continue; // Don't replace equal or lower priority
+        }
       }
     }
 
@@ -366,11 +411,20 @@ function toJSNumber(val) {
     const existingDocData = statusMap.get(slug);
 
     if (existingDocData && existingDocData.status === 'ready' && existingDocData.fileUrl) {
-      const existingPriority = existingDocData.priority ?? 2;
-      if (classified.priority >= existingPriority) {
-        continue;
+      const isForced = forceSlugArg && slug === forceSlugArg;
+      const existingStillValid = (!isForced && existingDocData.originalTelegramFilename)
+        ? (classifyDocument(existingDocData.originalTelegramFilename, existingDocData.telegramMessageDate || '').shouldRetain)
+        : false;
+
+      if (existingStillValid) {
+        const existingPriority = existingDocData.priority ?? 2;
+        if (classified.priority >= existingPriority) {
+          continue;
+        }
+        console.log(`🔄 Upgrading ${classified.displayName}: ${existingDocData.edition} (P${existingPriority}) -> ${classified.edition} (P${classified.priority})`);
+      } else {
+        console.log(`🔄 Replacing stored edition for ${classified.displayName}: "${existingDocData.originalTelegramFilename || 'unknown'}" -> "${filename}" (${classified.edition}, P${classified.priority})`);
       }
-      console.log(`🔄 Upgrading ${classified.displayName}: ${existingDocData.edition} (P${existingPriority}) -> ${classified.edition} (P${classified.priority})`);
     }
 
     const fileSizeNum = toJSNumber(doc.size);
