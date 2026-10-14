@@ -375,16 +375,23 @@ async function runIngestionPipeline() {
       }
     }
 
-    const existingCandidate = candidatesMap.get(slug);
-    if (!existingCandidate || classified.priority < existingCandidate.classified.priority) {
-      candidatesMap.set(slug, {
-        msg,
-        doc,
-        filename,
-        classified,
-        msgDateIso,
-      });
+    let candidatesList = candidatesMap.get(slug);
+    if (!candidatesList) {
+      candidatesList = [];
+      candidatesMap.set(slug, candidatesList);
     }
+    candidatesList.push({
+      msg,
+      doc,
+      filename,
+      classified,
+      msgDateIso,
+    });
+  }
+
+  // Sort candidates for each slug by priority ascending (P1, then P2, then P3...)
+  for (const list of candidatesMap.values()) {
+    list.sort((a, b) => a.classified.priority - b.classified.priority);
   }
 
   let newlyDownloadedCount = 0;
@@ -403,9 +410,76 @@ function toJSNumber(val) {
   return isNaN(parsed) ? 0 : parsed;
 }
 
+/**
+ * Inspects the PDF buffer header to detect whether a candidate is "The Hindu in School"
+ * or a thin supplement, even if misnamed by the uploader as a main edition.
+ */
+function isPdfSchoolOrSupplement(buffer, filename) {
+  const sample = buffer.subarray(0, Math.min(buffer.length, 262144)).toString('latin1');
+  if (
+    /inschool/i.test(sample) ||
+    /in\s*school/i.test(sample) ||
+    /thehindu_inschool/i.test(sample) ||
+    /school@thehindu/i.test(sample)
+  ) {
+    return { isSchool: true, reason: 'contains "The Hindu in School" internal metadata/strings' };
+  }
+  let pageCount = 0;
+  const countMatches = sample.match(/\/Count\s+(\d+)/g);
+  if (countMatches) {
+    for (const cm of countMatches) {
+      const p = parseInt(cm.replace(/\D/g, ''), 10);
+      if (p > 0) pageCount = Math.max(pageCount, p);
+    }
+  }
+  if (pageCount > 0 && pageCount <= 8) {
+    return { isSchool: true, reason: `low page count (${pageCount} pages <= 8, expected full broadsheet)` };
+  }
+  return { isSchool: false, reason: 'valid main broadsheet' };
+}
+
   // Ingest Candidates
-  for (const [slug, item] of candidatesMap.entries()) {
-    const { msg, doc, filename, classified, msgDateIso } = item;
+  for (const [slug, candidatesList] of candidatesMap.entries()) {
+    let chosenCandidate = null;
+    let chosenBuffer = null;
+
+    for (const cand of candidatesList) {
+      const { msg, doc, filename, classified, msgDateIso } = cand;
+      const fileSizeNum = toJSNumber(doc.size);
+      console.log(`⬇️ Downloading candidate for [${slug}]: ${filename} (P${classified.priority}, ${(fileSizeNum / (1024 * 1024)).toFixed(2)} MB)...`);
+
+      let buffer;
+      try {
+        buffer = await client.downloadMedia(msg, {});
+      } catch (dlErr) {
+        console.warn(`⚠️ Download failed for ${filename}:`, dlErr?.message);
+        continue;
+      }
+
+      if (!buffer || buffer.length === 0) {
+        console.warn(`⚠️ Empty buffer for ${filename}. Skipping.`);
+        continue;
+      }
+
+      if (slug === 'the-hindu') {
+        const check = isPdfSchoolOrSupplement(buffer, filename);
+        if (check.isSchool) {
+          console.warn(`❌ REJECTED School Edition candidate for The Hindu: "${filename}" (${check.reason}). Trying next candidate in priority order...`);
+          continue;
+        }
+      }
+
+      chosenCandidate = cand;
+      chosenBuffer = buffer;
+      break;
+    }
+
+    if (!chosenCandidate || !chosenBuffer) {
+      console.warn(`❌ No acceptable candidate found for [${slug}] after filtering.`);
+      continue;
+    }
+
+    const { msg, doc, filename, classified, msgDateIso } = chosenCandidate;
     const key = classified.uniquenessKey;
     const docRef = db.collection('newspapers').doc(key);
     const existingDocData = statusMap.get(slug);
@@ -413,7 +487,7 @@ function toJSNumber(val) {
     if (existingDocData && existingDocData.status === 'ready' && existingDocData.fileUrl) {
       const isForced = forceSlugArg && slug === forceSlugArg;
       const existingStillValid = (!isForced && existingDocData.originalTelegramFilename)
-        ? (classifyDocument(existingDocData.originalTelegramFilename, existingDocData.telegramMessageDate || '').shouldRetain)
+        ? (classifyDocument(existingDocData.originalTelegramFilename, existingDocData.telegramMessageDate || '').shouldRetain && !existingDocData.originalTelegramFilename.includes('The Hindu mumbai.13_10_2026'))
         : false;
 
       if (existingStillValid) {
@@ -428,7 +502,7 @@ function toJSNumber(val) {
     }
 
     const fileSizeNum = toJSNumber(doc.size);
-    console.log(`⬇️ Ingesting [${slug}]: ${filename} (${(fileSizeNum / (1024 * 1024)).toFixed(2)} MB)...`);
+    console.log(`📦 Storing validated [${slug}]: ${filename} (${(fileSizeNum / (1024 * 1024)).toFixed(2)} MB)...`);
 
     await docRef.set({
       publicationDate: targetDateStr,
@@ -441,13 +515,8 @@ function toJSNumber(val) {
     }, { merge: true });
 
     try {
-      const buffer = await client.downloadMedia(msg, {});
-      if (!buffer) {
-        throw new Error(`Media download returned empty buffer for ${filename}`);
-      }
-
       // Store PDF Asset using zero-cost GitHub Releases CDN storage
-      const assetRes = await storePdfAsset(targetDateStr, slug, filename, buffer);
+      const assetRes = await storePdfAsset(targetDateStr, slug, filename, chosenBuffer);
 
       const metadata = {
         publicationDate: targetDateStr,

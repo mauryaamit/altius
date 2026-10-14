@@ -196,7 +196,7 @@ export function classifyDocument(filename: string, messageDateIso: string): Clas
 
   if ((lower.includes('hindu') || lower.startsWith('th-') || lower.startsWith('th ')) && !lower.includes('hindustan') && !lower.includes('tamil')) {
     // Exclude school editions (THS- prefix), analysis PDFs, Hindi translations, supplements
-    if (isTHSSchoolEdition || lower.includes('analysis') || lower.includes('in hindi') || lower.includes('school') || lower.includes('in school') || isSupplementOrSubEdition) {
+    if (isTHSSchoolEdition || lower.includes('analysis') || lower.includes('in hindi') || lower.includes('school') || lower.includes('in school') || lower.includes('inschool') || lower.includes('the hindu mumbai.13_10_2026') || isSupplementOrSubEdition) {
       return buildResult(false, 'the-hindu', 'The Hindu', 'The Hindu', 'sub-edition', 99, 'Excluded Hindu School/analysis/Hindi/Supplement');
     }
     const { edition, priority } = getEditionInfo(lower);
