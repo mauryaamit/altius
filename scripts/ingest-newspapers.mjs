@@ -330,8 +330,8 @@ async function runIngestionPipeline() {
 
   const channelId = targetDialog.id ? targetDialog.id.toString() : targetDialog.entity.id.toString();
 
-  console.log('📥 Scanning recent Telegram channel messages (limit 600)...');
-  const messages = await client.getMessages(targetDialog.entity, { limit: 600 });
+  console.log('📥 Scanning recent Telegram channel messages (limit 1200)...');
+  const messages = await client.getMessages(targetDialog.entity, { limit: 1200 });
 
   const candidatesMap = new Map();
 
