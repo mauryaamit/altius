@@ -7,8 +7,8 @@ import {
   ArrowRight,
   Download,
   Calendar,
+  CalendarDays,
   Sparkles,
-  Bookmark,
   RotateCcw,
   ChevronRight,
 } from 'lucide-react';
@@ -52,83 +52,24 @@ const SUPPLEMENTARY_SLUGS = [
   'daily-vocabulary',
 ];
 
-interface PublicationCuratorial {
-  rubric: string;
-  kicker: string;
-  description: string;
-}
-
-const PUBLICATION_CURATION: Record<string, PublicationCuratorial> = {
-  'the-hindu': {
-    rubric: 'National Broadsheet',
-    kicker: 'Flagship Edition of Record',
-    description: 'Constitutional affairs, landmark Supreme Court coverage, governance discourse, and institutional policy critique.',
-  },
-  'indian-express': {
-    rubric: 'National Journal',
-    kicker: 'Journalism of Courage',
-    description: 'Signature "Explained" analytical journalism, investigative field reporting, and rigorous public governance critique.',
-  },
-  'mint': {
-    rubric: 'Financial Press',
-    kicker: 'Markets, VC & Strategy',
-    description: 'Corporate balance sheets, venture funding ecosystems, executive strategy, macro-policy, and technology disruption.',
-  },
-  'economic-times': {
-    rubric: 'Business Daily',
-    kicker: 'Industrial & Monetary Record',
-    description: 'Capital markets, Reserve Bank monetary policy, banking infrastructure, manufacturing, and international trade economics.',
-  },
-  'times-of-india': {
-    rubric: 'National Broadsheet',
-    kicker: 'Comprehensive Daily',
-    description: 'Broad-spectrum national headlines, civic and metropolitan governance, commerce updates, and global affairs.',
-  },
-  'hindustan-times': {
-    rubric: 'National Daily',
-    kicker: 'Public Affairs & Politics',
-    description: 'National political pulse, northern metropolitan coverage, economic briefs, and strategic diplomatic developments.',
-  },
-  'international-editorial': {
-    rubric: 'Global Geopolitics',
-    kicker: 'Foreign Policy & Diplomacy',
-    description: 'Selected international commentary from global editorial boards on geopolitics, multilateral treaties, and trade alliances.',
-  },
-  'hindi-editorial': {
-    rubric: 'National Opinion',
-    kicker: 'Rashtriya Vimarsh',
-    description: 'Curated Hindi-language editorial perspectives on socio-economic development, civil governance, and cultural discourse.',
-  },
-  'all-english-editorials': {
-    rubric: 'Executive Reading',
-    kicker: 'Consolidated Op-Ed Deck',
-    description: 'Consolidated daily opinion columns and editorial pages across all leading Indian broadsheets. Engineered for VARC and essay synthesis.',
-  },
-  'daily-vocabulary': {
-    rubric: 'Lexicon Masterclass',
-    kicker: 'Executive Verbal Aptitude',
-    description: 'High-frequency analytical vocabulary extracted from today\'s press, annotated with root etymology, synonyms, and contextual usage.',
-  },
-};
-
 const gridMotionVariants: Variants = {
   hidden: { opacity: 0.4 },
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.05,
+      staggerChildren: 0.04,
       delayChildren: 0.02,
     },
   },
 };
 
 const cardMotionVariants: Variants = {
-  hidden: { opacity: 0, y: 12 },
+  hidden: { opacity: 0, y: 10 },
   visible: {
     opacity: 1,
     y: 0,
     transition: {
-      duration: 0.45,
+      duration: 0.4,
       ease: [0.22, 1, 0.36, 1] as [number, number, number, number],
     },
   },
@@ -215,7 +156,7 @@ export default function NewspaperPage() {
     }
   };
 
-  // Short label for pills (e.g. "6 Nov 2026")
+  // Short label for pills (e.g. "6 Nov")
   const formatShortDate = (dateStr?: string) => {
     if (!dateStr) return '';
     try {
@@ -261,15 +202,14 @@ export default function NewspaperPage() {
     const isAvailable = paper.status === 'ready' || paper.status === 'ready_ondemand';
     const hasDownloadUrl = Boolean(paper.fileUrl);
     const fileSizeMB = paper.fileSize > 0 ? `${(paper.fileSize / (1024 * 1024)).toFixed(1)} MB` : null;
-    const curation = PUBLICATION_CURATION[paper.slug] || {
-      rubric: 'National Publication',
-      kicker: 'Daily Edition',
-      description: 'Comprehensive journalistic coverage and daily editorial discourse.',
-    };
 
     const targetReaderHref = isHistorical
       ? `/newspaper/${paper.publicationDate}/${paper.slug}?mode=ondemand`
       : `/newspaper/${paper.publicationDate}/${paper.slug}`;
+
+    const editionLabel = paper.edition && paper.edition !== 'none' && paper.edition !== 'source'
+      ? `${paper.edition} edition`
+      : 'National Edition';
 
     return (
       <motion.article
@@ -277,37 +217,51 @@ export default function NewspaperPage() {
         variants={cardMotionVariants}
         className={`${styles.card} ${isMuted ? styles.cardMuted : ''}`}
       >
-        <div>
-          {/* 1. Meta row: category label (left) & edition chip (right) */}
-          <div className={styles.cardMetaRow}>
-            <span className={styles.categoryLabel}>
-              {curation.rubric}
-            </span>
-
-            <span className={styles.editionChip}>
-              {paper.edition && paper.edition !== 'none' && paper.edition !== 'source'
-                ? `${paper.edition} edition`
-                : 'National'}
-            </span>
-          </div>
-
-          {/* 2. Newspaper name: Cormorant 28px */}
-          <h3 className={styles.newspaperName}>
-            {paper.displayName}
-          </h3>
-
-          {/* 3. Tagline: JetBrains Mono 10.5px burgundy */}
-          <p className={styles.tagline}>
-            {curation.kicker}
-          </p>
-
-          {/* 4. Description: DM Sans 14px, up to 4 lines */}
-          <p className={styles.description}>
-            {curation.description}
-          </p>
+        {/* Desktop Header: Edition chip */}
+        <div className={styles.cardHeaderDesktop}>
+          <span className={styles.editionChip}>
+            {editionLabel}
+          </span>
         </div>
 
-        {/* 5. Footer: margin-top auto, separated by hairline divider */}
+        {/* Mobile Header: Row 1 = chip (left) + download button (right) */}
+        <div className={styles.cardHeaderMobile}>
+          <span className={styles.editionChip}>
+            {editionLabel}
+          </span>
+          {hasDownloadUrl && (
+            <a
+              href={paper.fileUrl || '#'}
+              download={`${paper.slug}-${paper.publicationDate}.pdf`}
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Direct PDF download"
+              className={styles.downloadBtnMobile}
+              aria-label={`Download ${paper.displayName} PDF`}
+            >
+              <Download size={14} />
+            </a>
+          )}
+        </div>
+
+        {/* Newspaper Name: Cormorant 30px desktop / 22px mobile */}
+        <h3 className={styles.newspaperName}>
+          {paper.displayName}
+        </h3>
+
+        {/* Mobile Status Row (Row 3 on mobile: dot + file size) */}
+        <div className={styles.cardStatusMobile}>
+          <span
+            className={`${styles.statusDot} ${
+              isAvailable ? styles.statusDotReady : styles.statusDotPending
+            }`}
+          />
+          <span className={styles.fileSize}>
+            {fileSizeMB ? fileSizeMB : isAvailable ? 'Stream' : 'Pending'}
+          </span>
+        </div>
+
+        {/* Footer (Desktop: hairline + left dot/size/dl + right btn; Mobile: full-width btn) */}
         <div className={styles.cardFooter}>
           <div className={styles.footerLeft}>
             <span
@@ -329,12 +283,12 @@ export default function NewspaperPage() {
                 className={styles.downloadBtn}
                 aria-label={`Download ${paper.displayName} PDF`}
               >
-                <Download size={15} />
+                <Download size={14} />
               </a>
             )}
           </div>
 
-          <div>
+          <div className={styles.footerRight}>
             {isAvailable ? (
               <Link
                 href={targetReaderHref}
@@ -358,11 +312,6 @@ export default function NewspaperPage() {
     const isAvailable = paper.status === 'ready' || paper.status === 'ready_ondemand';
     const hasDownloadUrl = Boolean(paper.fileUrl);
     const fileSizeMB = paper.fileSize > 0 ? `${(paper.fileSize / (1024 * 1024)).toFixed(1)} MB` : null;
-    const curation = PUBLICATION_CURATION[paper.slug] || {
-      rubric: 'Executive Reading',
-      kicker: 'Curated Compendium',
-      description: 'Daily executive synthesis of opinion pieces and vocabulary mastery.',
-    };
 
     const targetReaderHref = isHistorical
       ? `/newspaper/${paper.publicationDate}/${paper.slug}?mode=ondemand`
@@ -374,32 +323,48 @@ export default function NewspaperPage() {
         variants={cardMotionVariants}
         className={styles.card}
       >
-        <div>
-          {/* Top Row: Rubric with Bookmark Icon (left) + Chip (right) */}
-          <div className={styles.cardMetaRow}>
-            <span className={styles.categoryLabel} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#801826' }}>
-              <Bookmark size={12} color="#801826" style={{ flexShrink: 0 }} />
-              {curation.rubric}
-            </span>
-            <span className={styles.editionChip} style={{ backgroundColor: '#EDE6D8', borderColor: '#DDD5C5' }}>
-              Curated Docket
-            </span>
-          </div>
+        {/* Desktop Header */}
+        <div className={styles.cardHeaderDesktop}>
+          <span className={styles.editionChip} style={{ backgroundColor: '#EDE6D8', borderColor: '#DDD5C5' }}>
+            Curated Docket
+          </span>
+        </div>
 
-          {/* Title */}
-          <h3 className={styles.newspaperName} style={{ WebkitLineClamp: 1 }}>
-            {paper.displayName}
-          </h3>
+        {/* Mobile Header: Row 1 = chip left + download button right */}
+        <div className={styles.cardHeaderMobile}>
+          <span className={styles.editionChip} style={{ backgroundColor: '#EDE6D8', borderColor: '#DDD5C5' }}>
+            Curated Docket
+          </span>
+          {hasDownloadUrl && (
+            <a
+              href={paper.fileUrl || '#'}
+              download={`${paper.slug}-${paper.publicationDate}.pdf`}
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Direct PDF download"
+              className={styles.downloadBtnMobile}
+              aria-label={`Download ${paper.displayName} PDF`}
+            >
+              <Download size={14} />
+            </a>
+          )}
+        </div>
 
-          {/* Kicker */}
-          <p className={styles.tagline}>
-            {curation.kicker}
-          </p>
+        {/* Title */}
+        <h3 className={styles.newspaperName}>
+          {paper.displayName}
+        </h3>
 
-          {/* Description: up to 3 lines */}
-          <p className={styles.description} style={{ WebkitLineClamp: 3 }}>
-            {curation.description}
-          </p>
+        {/* Mobile Status Row (Row 3 on mobile) */}
+        <div className={styles.cardStatusMobile}>
+          <span
+            className={`${styles.statusDot} ${
+              isAvailable ? styles.statusDotReady : styles.statusDotPending
+            }`}
+          />
+          <span className={styles.fileSize}>
+            {fileSizeMB ? `${fileSizeMB} · PDF` : 'Digital Edition'}
+          </span>
         </div>
 
         {/* Footer */}
@@ -424,12 +389,12 @@ export default function NewspaperPage() {
                 className={styles.downloadBtn}
                 aria-label={`Download ${paper.displayName} PDF`}
               >
-                <Download size={15} />
+                <Download size={14} />
               </a>
             )}
           </div>
 
-          <div>
+          <div className={styles.footerRight}>
             {isAvailable ? (
               <Link
                 href={targetReaderHref}
@@ -456,12 +421,12 @@ export default function NewspaperPage() {
         {/* Top Context Bar */}
         <div className={styles.topBar}>
           <div className={`${styles.container} ${styles.topBarInner}`}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <Link href="/" className={styles.backLink}>
                 ← Back to Desk
               </Link>
-              <span style={{ color: '#DDD5C5' }}>|</span>
-              <span style={{ fontFamily: 'var(--font-dm-sans), sans-serif', textTransform: 'uppercase' }}>
+              <span className={styles.libraryDivider}>|</span>
+              <span className={styles.libraryLabel}>
                 Altius Executive Reading Library
               </span>
             </div>
@@ -469,13 +434,13 @@ export default function NewspaperPage() {
             <div>
               <span className={styles.liveIndicator}>
                 <span className={styles.pulseDot} />
-                6 AM – 9 PM IST Ingestion Live
+                <span className={styles.timeRangeSpan}>6 AM – 9 PM IST </span>Ingestion Live
               </span>
             </div>
           </div>
         </div>
 
-        {/* Central Masthead */}
+        {/* Central Masthead (Reduced Vertical Space) */}
         <div className={`${styles.container} ${styles.masthead}`}>
           <p className={styles.eyebrow}>
             THE BROADSHEET & FINANCIAL DESK
@@ -488,55 +453,113 @@ export default function NewspaperPage() {
           </p>
         </div>
 
-        {/* Broadsheet Dateline Bar with Double Hairline Rules */}
+        {/* Broadsheet Dateline Bar (Refined Hairlines, Desktop & Mobile Formats) */}
         <div className={styles.datelineBar}>
-          <div className={`${styles.container} ${styles.datelineInner}`}>
-            {/* Dateline Date */}
-            <div className={styles.datelineDate}>
-              <Calendar size={14} color="#801826" />
-              <span>{formatMastheadDate(currentDisplayedCards.dateStr)}</span>
-            </div>
+          <div className={styles.container}>
+            {/* Desktop Layout (Single row) */}
+            <div className={styles.datelineDesktop}>
+              <div className={styles.datelineDate}>
+                <Calendar size={13} color="#801826" />
+                <span>{formatMastheadDate(currentDisplayedCards.dateStr)}</span>
+              </div>
 
-            {/* Edition Switcher Tabs */}
-            <div className={styles.dateControls}>
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveDateMode('today');
-                  setArchiveError(null);
-                }}
-                className={`${styles.datePill} ${
-                  activeDateMode === 'today' ? styles.datePillActive : ''
-                }`}
-              >
-                Today ({formatShortDate(data?.todayDate)})
-              </button>
-
-              {data?.previousDate && (
+              <div className={styles.dateControls}>
                 <button
                   type="button"
                   onClick={() => {
-                    setActiveDateMode('yesterday');
+                    setActiveDateMode('today');
                     setArchiveError(null);
                   }}
                   className={`${styles.datePill} ${
-                    activeDateMode === 'yesterday' ? styles.datePillActive : ''
+                    activeDateMode === 'today' ? styles.datePillActive : ''
                   }`}
                 >
-                  Yesterday ({formatShortDate(data.previousDate)})
+                  Today ({formatShortDate(data?.todayDate)})
                 </button>
-              )}
 
-              {/* Archive Date Input */}
-              <input
-                id="archive-date-input"
-                type="date"
-                max={data?.todayDate || new Date().toISOString().substring(0, 10)}
-                value={selectedArchiveDate}
-                onChange={handleArchiveDateSelect}
-                aria-label="Select archive date"
-                className={styles.dateInput}
-              />
+                {data?.previousDate && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveDateMode('yesterday');
+                      setArchiveError(null);
+                    }}
+                    className={`${styles.datePill} ${
+                      activeDateMode === 'yesterday' ? styles.datePillActive : ''
+                    }`}
+                  >
+                    Yesterday ({formatShortDate(data.previousDate)})
+                  </button>
+                )}
+
+                <div className={styles.datePickerWrapper}>
+                  <input
+                    id="archive-date-input"
+                    type="date"
+                    max={data?.todayDate || new Date().toISOString().substring(0, 10)}
+                    value={selectedArchiveDate}
+                    onChange={handleArchiveDateSelect}
+                    aria-label="Select archive date"
+                    className={styles.dateInput}
+                  />
+                  <CalendarDays size={14} className={styles.datePickerIcon} />
+                </div>
+              </div>
+            </div>
+
+            {/* Mobile Layout (2 compact rows ~110px total height) */}
+            <div className={styles.datelineMobile}>
+              {/* Row 1: Date text (left) + Date picker (right) */}
+              <div className={styles.dateMobileRow1}>
+                <div className={styles.datelineDate}>
+                  <Calendar size={13} color="#801826" />
+                  <span>{formatShortDate(currentDisplayedCards.dateStr) || 'Current'}</span>
+                </div>
+
+                <div className={styles.datePickerWrapper}>
+                  <input
+                    id="archive-date-input-mobile"
+                    type="date"
+                    max={data?.todayDate || new Date().toISOString().substring(0, 10)}
+                    value={selectedArchiveDate}
+                    onChange={handleArchiveDateSelect}
+                    aria-label="Select archive date"
+                    className={styles.dateInput}
+                  />
+                  <CalendarDays size={13} className={styles.datePickerIcon} />
+                </div>
+              </div>
+
+              {/* Row 2: Today & Yesterday equal pills in 2-column grid */}
+              <div className={styles.dateMobileRow2}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveDateMode('today');
+                    setArchiveError(null);
+                  }}
+                  className={`${styles.datePill} ${
+                    activeDateMode === 'today' ? styles.datePillActive : ''
+                  }`}
+                >
+                  Today ({formatShortDate(data?.todayDate)})
+                </button>
+
+                {data?.previousDate && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveDateMode('yesterday');
+                      setArchiveError(null);
+                    }}
+                    className={`${styles.datePill} ${
+                      activeDateMode === 'yesterday' ? styles.datePillActive : ''
+                    }`}
+                  >
+                    Yesterday ({formatShortDate(data.previousDate)})
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -548,10 +571,10 @@ export default function NewspaperPage() {
         {activeDateMode === 'archive' && (
           <div className={styles.archiveBanner}>
             <div>
-              <p style={{ fontFamily: 'var(--font-cormorant), Georgia, serif', fontSize: '20px', fontWeight: 600, color: '#181512', margin: 0 }}>
+              <p style={{ fontFamily: 'var(--font-cormorant), Georgia, serif', fontSize: '19px', fontWeight: 600, color: '#181512', margin: 0 }}>
                 Archive Edition: {formatMastheadDate(selectedArchiveDate)}
               </p>
-              <p style={{ fontFamily: 'var(--font-dm-sans), sans-serif', fontSize: '13px', color: '#5C5549', margin: '4px 0 0' }}>
+              <p style={{ fontFamily: 'var(--font-dm-sans), sans-serif', fontSize: '13px', color: '#5C5549', margin: '3px 0 0' }}>
                 Displaying historical dockets retrieved directly via Telegram MTProto stream.
               </p>
             </div>
@@ -570,11 +593,11 @@ export default function NewspaperPage() {
 
         {/* Loading Skeleton */}
         {(loading || archiveLoading) && (
-          <div style={{ marginTop: '40px' }}>
-            <div style={{ height: '24px', width: '240px', backgroundColor: '#EFE9DC', borderRadius: '4px', marginBottom: '24px' }} />
+          <div style={{ marginTop: '24px' }}>
+            <div style={{ height: '22px', width: '220px', backgroundColor: '#EFE9DC', borderRadius: '4px', marginBottom: '16px' }} />
             <div className={styles.cardGrid}>
               {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                <div key={i} style={{ height: '280px', backgroundColor: '#F3EFE6', border: '1px solid #E7E2D6', borderRadius: '20px' }} />
+                <div key={i} style={{ height: '170px', backgroundColor: '#F3EFE6', border: '1px solid rgba(60,40,20,0.1)', borderRadius: '20px' }} />
               ))}
             </div>
           </div>
@@ -582,11 +605,11 @@ export default function NewspaperPage() {
 
         {/* Global Error Banner */}
         {(error || archiveError) && !loading && !archiveLoading && (
-          <div style={{ margin: '32px 0', padding: '20px', backgroundColor: '#FDF2F2', border: '1px solid #F87171', borderRadius: '16px', color: '#991B1B' }}>
-            <h3 style={{ fontFamily: 'var(--font-cormorant), Georgia, serif', fontSize: '20px', fontWeight: 600, margin: '0 0 6px' }}>
+          <div style={{ margin: '24px 0', padding: '16px 20px', backgroundColor: '#FDF2F2', border: '1px solid #F87171', borderRadius: '16px', color: '#991B1B' }}>
+            <h3 style={{ fontFamily: 'var(--font-cormorant), Georgia, serif', fontSize: '19px', fontWeight: 600, margin: '0 0 4px' }}>
               Notice from Newspaper Desk
             </h3>
-            <p style={{ fontFamily: 'var(--font-dm-sans), sans-serif', fontSize: '14px', margin: 0 }}>
+            <p style={{ fontFamily: 'var(--font-dm-sans), sans-serif', fontSize: '13.5px', margin: 0 }}>
               {error || archiveError}
             </p>
           </div>
@@ -637,17 +660,17 @@ export default function NewspaperPage() {
               >
                 <div className={styles.supplementaryHeader}>
                   <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
-                      <Sparkles size={14} color="#801826" />
-                      <span style={{ fontFamily: 'var(--font-mono), monospace', fontSize: '10px', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.2em', color: '#801826' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                      <Sparkles size={13} color="#801826" />
+                      <span style={{ fontFamily: 'var(--font-mono), monospace', fontSize: '10px', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.18em', color: '#801826' }}>
                         CURATED SYNTHESIS
                       </span>
                     </div>
                     <h2 id="supplementary-reading-heading" className={styles.sectionHeading}>
                       Supplementary Reading & Verbal Masterclass
                     </h2>
-                    <p className={styles.sectionSubtext} style={{ maxWidth: '640px' }}>
-                      Full-spectrum editorial opinions consolidated across all major national broadsheets, paired with executive vocabulary compilations.
+                    <p className={styles.sectionSubtext} style={{ maxWidth: '600px' }}>
+                      Full-spectrum editorial opinions consolidated across all major broadsheets, paired with executive vocabulary compilations.
                     </p>
                   </div>
 
@@ -672,13 +695,13 @@ export default function NewspaperPage() {
 
             {/* ─── SECTION 3: YESTERDAY QUICK-ACCESS PREVIEW (when on Today mode) ─ */}
             {activeDateMode === 'today' && data?.previousDate && (
-              <section style={{ marginTop: '56px', paddingTop: '16px', borderTop: '1px solid #E7E2D6' }}>
+              <section style={{ marginTop: '36px' }}>
                 <div className={styles.archiveHeaderRow}>
                   <div>
-                    <span style={{ display: 'block', fontFamily: 'var(--font-mono), monospace', fontSize: '10.5px', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.12em', color: '#786E5E', marginBottom: '4px' }}>
+                    <span style={{ display: 'block', fontFamily: 'var(--font-mono), monospace', fontSize: '10px', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.12em', color: '#786E5E', marginBottom: '2px' }}>
                       RECORD ARCHIVE
                     </span>
-                    <h2 className={styles.sectionHeading} style={{ fontSize: '28px' }}>
+                    <h2 className={styles.sectionHeading} style={{ fontSize: '26px' }}>
                       Previous Day's Broadsheets ({formatShortDate(data.previousDate)})
                     </h2>
                   </div>
@@ -686,7 +709,7 @@ export default function NewspaperPage() {
                   <button
                     type="button"
                     onClick={() => setActiveDateMode('yesterday')}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', fontFamily: 'var(--font-mono), monospace', fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#801826' }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px', fontFamily: 'var(--font-mono), monospace', fontSize: '11.5px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#801826' }}
                   >
                     View All Stored Yesterday <ChevronRight size={14} />
                   </button>
@@ -710,7 +733,7 @@ export default function NewspaperPage() {
           <p className={styles.footerTitle}>
             The Altius Newspaper Room
           </p>
-          <p style={{ margin: '0 0 8px' }}>
+          <p style={{ margin: '0 0 6px' }}>
             Curated daily from verified MTProto broadsheet channels under strict regional edition priority.
           </p>
           <p style={{ margin: 0, fontSize: '10px', color: '#A3998A' }}>

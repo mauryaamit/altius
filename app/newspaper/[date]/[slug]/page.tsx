@@ -3,8 +3,10 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
+import { motion } from 'framer-motion';
 import { ArrowLeft, Maximize2, ZoomIn, ZoomOut, RotateCcw, AlertTriangle } from 'lucide-react';
 import { formatDateLong } from '@/lib/telegram/date-utils';
+import styles from './NewspaperReader.module.css';
 
 interface NewspaperDetail {
   slug: string;
@@ -101,118 +103,133 @@ export default function PDFReaderPage() {
   const formattedDisplayDate = formatDateLong(dateParam);
 
   return (
-    <div className="pdf-reader-root min-h-screen flex flex-col bg-slate-900 text-white">
-      {/* Top Controls Bar */}
-      <header className="reader-header bg-slate-950 border-b border-slate-800 px-4 py-3 flex flex-wrap items-center justify-between gap-4 sticky top-0 z-50">
-        <div className="flex items-center gap-4">
-          <Link
-            href="/newspaper"
-            className="flex items-center gap-1.5 text-xs font-mono text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded transition-colors"
-          >
+    <div className={styles.readerRoot}>
+      {/* ─── TOP CONTROLS BAR (Sticky, Blended, Full-width) ───────────── */}
+      <motion.header
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35 }}
+        className={styles.topBar}
+      >
+        <div className={styles.topBarInner}>
+          {/* Zone 1: Back to Desk */}
+          <Link href="/newspaper" className={styles.backBtn}>
             <ArrowLeft size={14} /> Back to Newspaper Room
           </Link>
+
+          {/* Zone 2: Title Block */}
           {paper && (
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="font-display text-lg text-white font-semibold leading-tight">
+            <div className={styles.titleBlock}>
+              <div className={styles.titleRow}>
+                <h1 className={styles.newspaperTitle}>
                   {paper.displayName}
                 </h1>
                 {isOndemand ? (
-                  <span className="font-mono text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                  <span className={styles.ondemandBadge}>
                     ON-DEMAND EDITION
                   </span>
                 ) : (
-                  <span className="font-mono text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                  <span className={styles.storedBadge}>
                     STORED EDITION
                   </span>
                 )}
               </div>
-              <p className="font-mono text-xs text-slate-400 mt-0.5">
-                {formattedDisplayDate} &bull; <span className="uppercase text-sky-400">{paper.edition} edition</span>
+              <p className={styles.metaLine}>
+                {formattedDisplayDate} &bull;{' '}
+                <span className={styles.editionText}>
+                  {paper.edition && paper.edition !== 'none' && paper.edition !== 'source'
+                    ? `${paper.edition} edition`
+                    : 'National Edition'}
+                </span>
               </p>
             </div>
           )}
+
+          {/* Zone 3: Controls Area */}
+          {paper && paper.fileUrl && !error && (
+            <div className={styles.controlsArea}>
+              <div className={styles.segmentedControls}>
+                <button
+                  type="button"
+                  onClick={handleZoomOut}
+                  className={styles.iconControlBtn}
+                  title="Zoom Out"
+                  aria-label="Zoom Out"
+                >
+                  <ZoomOut size={16} />
+                </button>
+                <span className={styles.zoomPercentage}>{zoom}%</span>
+                <button
+                  type="button"
+                  onClick={handleZoomIn}
+                  className={styles.iconControlBtn}
+                  title="Zoom In"
+                  aria-label="Zoom In"
+                >
+                  <ZoomIn size={16} />
+                </button>
+                <button
+                  type="button"
+                  onClick={handleZoomReset}
+                  className={styles.iconControlBtn}
+                  title="Reset Zoom"
+                  aria-label="Reset Zoom"
+                >
+                  <RotateCcw size={14} />
+                </button>
+              </div>
+
+              <a
+                href={paper.fileUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.fullscreenBtn}
+                title="Open in new window"
+              >
+                <Maximize2 size={14} /> Fullscreen
+              </a>
+            </div>
+          )}
         </div>
+      </motion.header>
 
-        {paper && paper.fileUrl && !error && (
-          <div className="flex items-center gap-2">
-            <div className="flex items-center bg-slate-800 rounded p-1 text-slate-300">
-              <button
-                onClick={handleZoomOut}
-                className="p-1 hover:text-white hover:bg-slate-700 rounded transition-colors"
-                title="Zoom Out"
-              >
-                <ZoomOut size={16} />
-              </button>
-              <span className="font-mono text-xs px-2 min-w-[3rem] text-center">{zoom}%</span>
-              <button
-                onClick={handleZoomIn}
-                className="p-1 hover:text-white hover:bg-slate-700 rounded transition-colors"
-                title="Zoom In"
-              >
-                <ZoomIn size={16} />
-              </button>
-              <button
-                onClick={handleZoomReset}
-                className="p-1 hover:text-white hover:bg-slate-700 rounded transition-colors border-l border-slate-700 ml-1"
-                title="Reset Zoom"
-              >
-                <RotateCcw size={14} />
-              </button>
-            </div>
-
-            <a
-              href={paper.fileUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1 text-xs font-mono text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded transition-colors"
-              title="Open in new window"
-            >
-              <Maximize2 size={14} /> Fullscreen
-            </a>
-          </div>
-        )}
-      </header>
-
-      {/* Main Reader Viewport */}
-      <main className="flex-1 flex flex-col items-center justify-center p-4 bg-slate-900 overflow-auto">
+      {/* ─── MAIN VIEWER VIEWPORT ────────────────────────────────────────── */}
+      <main className={styles.viewerStage}>
         {loading ? (
-          <div className="flex flex-col items-center justify-center p-12 text-slate-300 font-mono text-sm gap-4 bg-slate-950/80 rounded-xl border border-slate-800 max-w-md text-center">
-            <div className="w-9 h-9 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
-            <div>
-              <p className="font-bold text-white mb-1">
-                {isOndemand ? 'Fetching edition from Telegram source…' : 'Loading stored PDF reader stream…'}
-              </p>
-              <p className="text-xs text-slate-400 font-body">
-                Please wait while we prepare the high-resolution edition.
-              </p>
-            </div>
+          <div className={styles.stateCard}>
+            <div className={styles.spinner} />
+            <h2 className={styles.stateHeading}>
+              {isOndemand ? 'Fetching edition from Telegram…' : 'Opening edition stream…'}
+            </h2>
+            <p className={styles.stateBody}>
+              Please wait while we prepare the high-resolution broadsheet.
+            </p>
           </div>
         ) : error || !paper || !paper.fileUrl ? (
-          <div className="max-w-md p-8 bg-slate-950 border border-slate-800 rounded-xl text-center my-12 shadow-2xl">
-            <AlertTriangle className="w-12 h-12 text-amber-500 mx-auto mb-4" />
-            <h2 className="font-display text-xl text-white font-semibold mb-2">Unable to retrieve this edition</h2>
-            <p className="font-body text-sm text-slate-400 mb-6 leading-relaxed">
+          <div className={styles.stateCard}>
+            <AlertTriangle size={36} color="#801826" style={{ margin: '0 auto 16px' }} />
+            <h2 className={styles.stateHeading}>Unable to retrieve this edition</h2>
+            <p className={styles.stateBody}>
               {error || "We couldn't retrieve this newspaper from the source right now."}
             </p>
-            <Link
-              href="/newspaper"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-mono text-xs font-semibold transition-colors shadow-sm"
-            >
+            <Link href="/newspaper" className={styles.returnHomeBtn}>
               <ArrowLeft size={14} /> Return to Newspaper Room
             </Link>
           </div>
         ) : (
-          <div
-            className="w-full flex-1 max-w-6xl mx-auto rounded overflow-hidden shadow-2xl transition-all duration-200"
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+            className={styles.viewerContainer}
             style={{ transform: `scale(${zoom / 100})`, transformOrigin: 'top center' }}
           >
             <iframe
               src={`${paper.fileUrl}#toolbar=1&navpanes=0`}
-              className="w-full h-[calc(100vh-80px)] border-0 rounded bg-white"
+              className={styles.pdfFrame}
               title={`${paper.displayName} PDF Viewer`}
             />
-          </div>
+          </motion.div>
         )}
       </main>
     </div>

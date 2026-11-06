@@ -1,0 +1,367 @@
+/* Scope override so altius-main shell does not restrict reader page width or create side strips */
+:global(.altius-main:has(.readerRoot)) {
+  max-width: 100% !important;
+  padding: 0 !important;
+}
+
+.readerRoot {
+  box-sizing: border-box;
+  min-height: 100dvh;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  background-color: #EAE3D5;
+  background-image: radial-gradient(1200px 600px at 50% -10%, #F4EEE3, transparent);
+  color: #1A1815;
+  display: flex;
+  flex-direction: column;
+}
+
+.readerRoot *,
+.readerRoot *::before,
+.readerRoot *::after {
+  box-sizing: border-box;
+}
+
+/* Top Bar (Sticky, Full Width, Blended) */
+.topBar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  background: rgba(250, 247, 240, 0.88);
+  border-bottom: 1px solid rgba(60, 40, 20, 0.10);
+  padding: 12px 24px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.topBarInner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Zone 1: Back button */
+.backBtn {
+  height: 38px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(60, 40, 20, 0.15);
+  background: #FFFEFB;
+  color: #1A1713;
+  font-family: var(--font-dm-sans), sans-serif;
+  font-size: 13px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background-color 0.15s ease, transform 0.1s ease;
+}
+
+.backBtn:hover {
+  background-color: #F1EADD;
+}
+
+.backBtn:active {
+  transform: scale(0.97);
+}
+
+/* Zone 2: Title block */
+.titleBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.newspaperTitle {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: 26px;
+  font-weight: 500;
+  color: #181512;
+  line-height: 1.1;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.storedBadge {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #E7F1EA;
+  color: #1F6B45;
+  border: 1px solid rgba(31, 107, 69, 0.2);
+  font-family: var(--font-mono), monospace;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.10em;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.ondemandBadge {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #FDF4E6;
+  color: #92580E;
+  border: 1px solid rgba(146, 88, 14, 0.2);
+  font-family: var(--font-mono), monospace;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.10em;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.metaLine {
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  color: #6B6258;
+  margin: 0;
+}
+
+.editionText {
+  text-transform: uppercase;
+  color: #7A1426;
+  font-weight: 600;
+}
+
+/* Zone 3: Controls Area */
+.controlsArea {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.segmentedControls {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: #F1EADD;
+  border: 1px solid rgba(60, 40, 20, 0.10);
+}
+
+.iconControlBtn {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #544D42;
+  transition: background-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
+}
+
+.iconControlBtn:hover {
+  background-color: #FFFEFB;
+  color: #181512;
+}
+
+.iconControlBtn:active {
+  transform: scale(0.95);
+}
+
+.zoomPercentage {
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  min-width: 52px;
+  text-align: center;
+  color: #1A1815;
+  font-weight: 600;
+  user-select: none;
+}
+
+.fullscreenBtn {
+  height: 38px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(60, 40, 20, 0.15);
+  background: #FFFEFB;
+  color: #1A1815;
+  font-family: var(--font-dm-sans), sans-serif;
+  font-size: 13px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.15s ease, transform 0.1s ease;
+}
+
+.fullscreenBtn:hover {
+  background-color: #F1EADD;
+}
+
+.fullscreenBtn:active {
+  transform: scale(0.97);
+}
+
+/* Main Viewer Stage */
+.viewerStage {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px;
+  width: 100%;
+}
+
+.viewerContainer {
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #FFFEFB;
+  border: 1px solid rgba(60, 40, 20, 0.12);
+  box-shadow: 0 2px 4px rgba(40, 25, 10, 0.05), 0 24px 48px -20px rgba(40, 25, 10, 0.28);
+  height: calc(100dvh - 64px - 48px);
+  min-height: 520px;
+  transition: transform 0.2s ease;
+}
+
+.pdfFrame {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background-color: #FFFFFF;
+}
+
+/* Loading & Error Cards */
+.stateCard {
+  max-width: 480px;
+  width: 100%;
+  margin: 60px auto;
+  padding: 36px 32px;
+  background: #FAF7F0;
+  border: 1px solid rgba(60, 40, 20, 0.12);
+  border-radius: 16px;
+  text-align: center;
+  box-shadow: 0 4px 16px rgba(40, 25, 10, 0.06);
+}
+
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid rgba(128, 24, 38, 0.15);
+  border-top-color: #801826;
+  border-radius: 999px;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 16px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.stateHeading {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: 24px;
+  font-weight: 600;
+  color: #181512;
+  margin: 0 0 8px;
+}
+
+.stateBody {
+  font-family: var(--font-dm-sans), sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #5C5549;
+  margin: 0 0 20px;
+}
+
+.returnHomeBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 20px;
+  border-radius: 999px;
+  background-color: #801826;
+  color: #FFFFFF;
+  font-family: var(--font-dm-sans), sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background-color 0.15s ease, transform 0.1s ease;
+}
+
+.returnHomeBtn:hover {
+  background-color: #68121E;
+}
+
+.returnHomeBtn:active {
+  transform: scale(0.97);
+}
+
+/* Responsive (< 720px) */
+@media (max-width: 720px) {
+  .topBar {
+    padding: 12px 16px;
+  }
+
+  .topBarInner {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .mobileRow1 {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .titleBlock {
+    text-align: left;
+    width: 100%;
+  }
+
+  .newspaperTitle {
+    font-size: 22px;
+  }
+
+  .controlsArea {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .segmentedControls {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .viewerStage {
+    padding: 12px;
+  }
+
+  .viewerContainer {
+    border-radius: 12px;
+    height: calc(100dvh - 170px);
+    min-height: 420px;
+  }
+}
