@@ -477,6 +477,13 @@ function isPdfSchoolOrSupplement(buffer, filename) {
     for (const cand of candidatesList) {
       const { msg, doc, filename, classified, msgDateIso } = cand;
       const fileSizeNum = toJSNumber(doc.size);
+
+      // Skip bloated compendiums (>200MB) that contain bundled suburban supplements
+      if (fileSizeNum > 200 * 1024 * 1024) {
+        console.warn(`⚠️ Skipping oversized bundle (>200MB) for [${slug}]: "${filename}" (${(fileSizeNum / (1024 * 1024)).toFixed(2)} MB). Checking next candidate...`);
+        continue;
+      }
+
       console.log(`⬇️ Downloading candidate for [${slug}]: ${filename} (P${classified.priority}, ${(fileSizeNum / (1024 * 1024)).toFixed(2)} MB)...`);
 
       let buffer;
