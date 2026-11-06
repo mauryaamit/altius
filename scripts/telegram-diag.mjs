@@ -62,25 +62,50 @@ async function runDiagnostic() {
   console.log(`✅ Account Verified: ${meName} (@${me.username || me.id})`);
 
   console.log('\n🔍 Searching dialogs for target channel...');
-  const dialogs = await client.getDialogs({});
-  
-  let targetDialog = dialogs.find((d) => {
-    const title = d.title || d.name || '';
-    return title.toLowerCase() === TARGET_CHANNEL_NAME.toLowerCase() ||
-           title.toLowerCase().includes("english pass");
-  });
+  let targetDialog = null;
+  const channelIdEnv = process.env.TELEGRAM_CHANNEL_ID?.trim();
+
+  if (channelIdEnv) {
+    try {
+      const entity = await client.getEntity(channelIdEnv);
+      if (entity) {
+        targetDialog = {
+          entity,
+          id: entity.id,
+          title: entity.title || entity.name || channelIdEnv,
+        };
+        console.log(`✅ Direct entity resolution via TELEGRAM_CHANNEL_ID succeeded: "${targetDialog.title}" (${targetDialog.id})`);
+      }
+    } catch (e) {
+      console.warn(`⚠️ Direct entity resolution via TELEGRAM_CHANNEL_ID (${channelIdEnv}) failed:`, e?.message);
+    }
+  }
 
   if (!targetDialog) {
-    console.warn(`\n⚠️ Exact match not found in recent dialogs. Scanning all joined channels:`);
-    for (const d of dialogs) {
-      if (d.isChannel || d.isGroup) {
-        console.log(`   - "${d.title}" (ID: ${d.id})`);
+    const dialogs = await client.getDialogs({});
+    const matches = dialogs.filter(d => {
+      const title = (d.title || d.name || '').toLowerCase();
+      return title.includes(TARGET_CHANNEL_NAME.toLowerCase()) || 
+             title.includes("english pass") ||
+             title.includes("all english epaper");
+    });
+
+    if (matches.length > 0) {
+      const active = matches.find(d => !d.entity?.left) || matches[0];
+      targetDialog = active;
+      console.log(`✅ Resolved target channel via dialog search: "${targetDialog.title}" (${targetDialog.id})`);
+    } else {
+      console.warn(`\n⚠️ Exact match not found in recent dialogs. Scanning all joined channels:`);
+      for (const d of dialogs) {
+        if (d.isChannel || d.isGroup) {
+          console.log(`   - "${d.title}" (ID: ${d.id})`);
+        }
       }
+      console.error(`\n❌ Could not locate channel matching "${TARGET_CHANNEL_NAME}".`);
+      console.error('   Please ensure your account has joined this channel in Telegram.\n');
+      await client.disconnect();
+      process.exit(1);
     }
-    console.error(`\n❌ Could not locate channel matching "${TARGET_CHANNEL_NAME}".`);
-    console.error('   Please ensure your account has joined this channel in Telegram.\n');
-    await client.disconnect();
-    process.exit(1);
   }
 
   const channelTitle = targetDialog.title;

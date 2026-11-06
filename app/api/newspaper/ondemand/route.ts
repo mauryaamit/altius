@@ -65,8 +65,36 @@ async function handleOndemandRequest(request: NextRequest, isHeadOnly: boolean) 
 
     await client.connect();
 
-    const dialogs = await client.getDialogs({});
-    const targetDialog = dialogs.find(d => d.title && d.title.toLowerCase().includes('english pass'));
+    let targetDialog: any = null;
+    const channelIdEnv = process.env.TELEGRAM_CHANNEL_ID?.trim();
+
+    if (channelIdEnv) {
+      try {
+        const entity = await client.getEntity(channelIdEnv);
+        if (entity) {
+          targetDialog = {
+            entity,
+            id: entity.id,
+            title: (entity as any).title || (entity as any).name || channelIdEnv,
+          };
+        }
+      } catch (e) {
+        console.warn(`[ON-DEMAND RETRIEVAL] Could not resolve channel via TELEGRAM_CHANNEL_ID:`, e);
+      }
+    }
+
+    if (!targetDialog) {
+      const dialogs = await client.getDialogs({});
+      const matches = dialogs.filter(d => {
+        const t = (d.title || '').toLowerCase();
+        return t.includes('english pass') || t.includes('all english epaper');
+      });
+
+      if (matches.length > 0) {
+        const active = matches.find(d => !(d.entity as any)?.left) || matches[0];
+        targetDialog = active;
+      }
+    }
 
     if (!targetDialog) {
       console.log(`[ON-DEMAND RETRIEVAL] Source channel "${TARGET_CHANNEL_NAME}" not accessible.`);

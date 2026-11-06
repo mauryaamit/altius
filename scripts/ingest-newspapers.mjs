@@ -319,8 +319,39 @@ async function runIngestionPipeline() {
     process.exit(1);
   }
 
-  const dialogs = await client.getDialogs({});
-  const targetDialog = dialogs.find(d => d.title && d.title.toLowerCase().includes("english pass"));
+  // Resolve target channel via TELEGRAM_CHANNEL_ID if provided, or fuzzy dialog match
+  let targetDialog = null;
+  const channelIdEnv = process.env.TELEGRAM_CHANNEL_ID?.trim();
+
+  if (channelIdEnv) {
+    try {
+      const entity = await client.getEntity(channelIdEnv);
+      if (entity) {
+        targetDialog = {
+          entity,
+          id: entity.id,
+          title: entity.title || entity.name || channelIdEnv,
+        };
+        console.log(`✅ Resolved target channel via TELEGRAM_CHANNEL_ID: "${targetDialog.title}" (${targetDialog.id})`);
+      }
+    } catch (e) {
+      console.warn(`⚠️ Could not resolve channel directly by TELEGRAM_CHANNEL_ID (${channelIdEnv}): ${e?.message}`);
+    }
+  }
+
+  if (!targetDialog) {
+    const dialogs = await client.getDialogs({});
+    const matches = dialogs.filter(d => {
+      const t = (d.title || d.name || '').toLowerCase();
+      return t.includes('english pass') || t.includes('all english epaper');
+    });
+
+    if (matches.length > 0) {
+      const active = matches.find(d => !d.entity?.left) || matches[0];
+      targetDialog = active;
+      console.log(`✅ Resolved target channel via dialog search: "${targetDialog.title}" (${targetDialog.id})`);
+    }
+  }
 
   if (!targetDialog) {
     console.error(`❌ Target channel "${TARGET_CHANNEL_NAME}" not found.`);
