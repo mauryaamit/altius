@@ -2,16 +2,12 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import {
   FileText,
   CheckCircle2,
   XCircle,
   ArrowRight,
   Clock,
-  Search,
-  Loader2,
-  Calendar as CalendarIcon,
   Sparkles,
 } from 'lucide-react';
 
@@ -53,20 +49,10 @@ const SUPPLEMENTARY_SLUGS = [
   'daily-vocabulary',
 ];
 
-const TARGET_SLUGS = [...CORE_SLUGS, ...SUPPLEMENTARY_SLUGS];
-
 export default function NewspaperPage() {
-  const router = useRouter();
-
   const [data, setData] = useState<MetadataResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-
-  // Older date picker state
-  const [olderDate, setOlderDate] = useState<string>('');
-  const [olderCards, setOlderCards] = useState<NewspaperCard[]>([]);
-  const [olderLoading, setOlderLoading] = useState<boolean>(false);
-  const [fetchingSlug, setFetchingSlug] = useState<string | null>(null);
 
   useEffect(() => {
     fetchMainMetadata();
@@ -80,9 +66,6 @@ export default function NewspaperPage() {
       const json = await res.json();
       if (json.success) {
         setData(json);
-        // Default older date to 3 days ago for quick exploration
-        const defaultOlder = new Date(Date.now() - 3 * 86400000).toISOString().substring(0, 10);
-        setOlderDate(defaultOlder);
       } else {
         setError(json.error || 'Unable to load newspaper desk metadata.');
       }
@@ -91,33 +74,6 @@ export default function NewspaperPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const fetchOlderMetadata = async (dateVal: string) => {
-    if (!dateVal) return;
-    setOlderLoading(true);
-    try {
-      const res = await fetch(`/api/newspaper?date=${dateVal}`);
-      const json = await res.json();
-      if (json.success && json.newspapers) {
-        setOlderCards(json.newspapers);
-      }
-    } catch {
-      // ignore
-    } finally {
-      setOlderLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (olderDate) {
-      fetchOlderMetadata(olderDate);
-    }
-  }, [olderDate]);
-
-  const handleFetchAndRead = (slug: string, date: string) => {
-    setFetchingSlug(slug);
-    router.push(`/newspaper/${date}/${slug}?mode=ondemand`);
   };
 
   const formatDateLabel = (dateStr?: string) => {
@@ -285,99 +241,6 @@ export default function NewspaperPage() {
           )}
         </section>
       )}
-
-      {/* ─── SECTION 3: LOOKING FOR AN OLDER EDITION? ───────────────────── */}
-      <section className="mt-14 pt-8 border-t border-[#E2DDD5]">
-        <div className="mb-6">
-          <div className="flex items-center gap-2 mb-2">
-            <Sparkles className="w-4 h-4 text-amber-700" />
-            <h2 className="font-display text-2xl font-medium text-[#0F172A]">
-              LOOKING FOR AN OLDER EDITION?
-            </h2>
-          </div>
-          <p className="font-body text-sm text-[#475569] max-w-xl">
-            Older editions aren't stored permanently. Fetch one from the source when you need it.
-          </p>
-        </div>
-
-        {/* Polished Date Picker Control */}
-        <div className="bg-white border border-[#CBD5E1] p-4 rounded-xl mb-8 flex flex-wrap items-center justify-between gap-4 shadow-xs">
-          <div className="flex items-center gap-3">
-            <CalendarIcon className="w-5 h-5 text-[#0F172A]" />
-            <label htmlFor="older-date-select" className="font-mono text-xs uppercase font-bold text-[#1E293B]">
-              Select Publication Date:
-            </label>
-          </div>
-
-          <input
-            id="older-date-select"
-            type="date"
-            value={olderDate}
-            max={new Date().toISOString().substring(0, 10)}
-            onChange={(e) => setOlderDate(e.target.value)}
-            className="font-mono text-sm font-semibold text-[#1E293B] bg-[#F8FAFC] border border-[#94A3B8] rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#0F172A] hover:bg-slate-100 transition-colors cursor-pointer"
-          />
-        </div>
-
-        {/* Older Date Candidates Grid */}
-        {olderLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-            {TARGET_SLUGS.map((s) => (
-              <div key={s} className="h-40 bg-[#F1ECE4] border border-[#E2DDD5] rounded-xl animate-pulse p-4" />
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-            {olderCards.map((paper) => {
-              const isFetching = fetchingSlug === paper.slug;
-
-              return (
-                <div
-                  key={paper.slug}
-                  className="paper-tile flex flex-col justify-between p-5 bg-white border border-[#E2DDD5] rounded-xl hover:border-amber-700 transition-all shadow-xs"
-                >
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="font-mono text-[10px] uppercase font-semibold tracking-wider px-2 py-0.5 rounded bg-sky-50 text-sky-900 border border-sky-200">
-                        Source Stream
-                      </span>
-                      <span className="flex items-center text-[11px] text-slate-500 font-mono">
-                        Available from source
-                      </span>
-                    </div>
-
-                    <h3 className="font-display text-lg text-[#0F172A] font-semibold leading-snug mb-1">
-                      {paper.displayName}
-                    </h3>
-                  </div>
-
-                  <div className="mt-5 pt-3 border-t border-[#F1ECE4] flex items-center justify-between">
-                    <span className="font-mono text-xs text-[#64748B]">
-                      On-demand
-                    </span>
-
-                    <button
-                      onClick={() => handleFetchAndRead(paper.slug, olderDate)}
-                      disabled={isFetching}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-mono font-semibold text-white bg-amber-700 hover:bg-amber-800 disabled:opacity-50 transition-colors shadow-xs"
-                    >
-                      {isFetching ? (
-                        <>
-                          <Loader2 size={13} className="animate-spin" /> Retrieving…
-                        </>
-                      ) : (
-                        <>
-                          Fetch & Read <ArrowRight size={13} />
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </section>
     </div>
   );
 }
